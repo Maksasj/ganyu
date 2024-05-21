@@ -12,13 +12,15 @@
 #include "chttp/chttp.h"
 
 HTTPResponse* index_page(HTTPConnection* con, HTTPRequest* request);
-HTTPResponse* about_page(HTTPConnection* con, HTTPRequest* request);
+HTTPResponse* file_page(HTTPConnection* con, HTTPRequest* request);
+HTTPResponse* directory_page(HTTPConnection* con, HTTPRequest* request);
 
 int main() {
     HTTPServer* server = http_new_server(6969);
 
     http_str_route(server, "/", index_page);
-    http_str_route(server, "/about", about_page);
+    http_glob_route(server, "/file?fname=*", file_page);
+    http_str_route(server, "/directory", directory_page);
 
     while(http_running(server)) {
         http_listen(server);
@@ -33,8 +35,14 @@ HTTPResponse* index_page(HTTPConnection* con, HTTPRequest* request) {
     return http_ok_response_file(HTTP_1_1, "index.html");
 }
 
-HTTPResponse* about_page(HTTPConnection* con, HTTPRequest* request) {
-    return http_ok_response_file(HTTP_1_1, "about.html");
+HTTPResponse* file_page(HTTPConnection* con, HTTPRequest* request) {
+    // printf("%s\n", request->requestUri);
+
+    return http_ok_response_file(HTTP_1_1, "file.html");
+}
+
+HTTPResponse* directory_page(HTTPConnection* con, HTTPRequest* request) {
+    return http_ok_response_file(HTTP_1_1, "directory.html");
 }
 
 /*
