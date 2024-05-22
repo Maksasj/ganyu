@@ -16,7 +16,7 @@ HTTPResponse* file_page(HTTPConnection* con, HTTPRequest* request);
 HTTPResponse* directory_page(HTTPConnection* con, HTTPRequest* request);
 
 int main() {
-    HTTPServer* server = http_new_server(6969);
+    HTTPServer* server = http_new_server(80);
 
     http_str_route(server, "/", index_page);
     http_glob_route(server, "/file*", file_page);
@@ -36,6 +36,16 @@ HTTPResponse* index_page(HTTPConnection* con, HTTPRequest* request) {
 }
 
 HTTPResponse* file_page(HTTPConnection* con, HTTPRequest* request) {
+    CHTTPGetRequestParsed* get = chttp_parse_get_request(request);
+
+    if(get == NULL)
+        return http_not_found_response(HTTP_1_1, "404 Not found");
+
+    for(int i = 0; i < get->fieldCount; ++i) {
+        printf("%d: '%s' = '%s'\n", i, get->fields[i]->fieldName, get->fields[i]->fieldValue);
+    }
+
+    chttp_free_get_request_parsed(get);
     return http_ok_response_file(HTTP_1_1, "file.html");
 }
 
