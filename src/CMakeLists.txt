@@ -2,6 +2,7 @@ file(GLOB_RECURSE GANYU_SOURCE_FILES *.c)
 
 include_directories("./")
 include_directories("../3dparty/chttp/src")
+include_directories("../3dparty/chtml")
 include_directories("/usr/include/postgresql")
 
 find_package(libssh REQUIRED)

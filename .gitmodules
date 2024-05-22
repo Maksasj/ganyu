@@ -1,3 +1,6 @@
 [submodule "3dparty/chttp"]
 	path = 3dparty/chttp
 	url = git@github.com:Maksasj/chttp.git
+[submodule "3dparty/chtml"]
+	path = 3dparty/chtml
+	url = git@github.com:Maksasj/chtml.git
