@@ -31,8 +31,138 @@ int main() {
     return 0;
 }
 
+/*
+char* cstring(const char* format, ...) {
+    char buffer[4096];
+
+    va_list args;
+    va_start(args, format);
+    vsprintf(buffer, format, args);
+    va_end(args);
+
+    unsigned int length = strlen(buffer);
+
+    char* result = calloc(1, length + 1);
+    strcpy(result, buffer);
+
+    return result;
+}
+
+char* chtml(const char *format, ...) {
+    char* openTag = "<html>\n";
+    char* closeTag = "</html>\n";
+  
+    char* child = NULL;
+
+    unsigned int openTagLength = strlen(openTag);
+    unsigned int childLength = strlen(child);
+    unsigned int closeTagLength = strlen(closeTag);
+
+    char* result = (char*) calloc(1, openTagLength + childLength + closeTagLength + 1);
+
+    strcpy(result, openTag);
+    strcat(result, child);
+    strcat(result, closeTag);
+
+    free(child);
+
+    return result;
+}
+
+char* cp(const char *format, ...) {
+    char* openTag = "<p>";
+    char* closeTag = "</p>";
+  
+    unsigned int openTagLength = strlen(openTag);
+    unsigned int childLength = strlen(child);
+    unsigned int closeTagLength = strlen(closeTag);
+
+    char* result = (char*) calloc(1, openTagLength + childLength + closeTagLength + 1);
+
+    strcpy(result, openTag);
+    strcat(result, child);
+    strcat(result, closeTag);
+
+    free(child);
+
+    return result;
+}
+*/
+
+char* celement(const char *format, ...) {
+    char* openTag = "<p>";
+    char* closeTag = "</p>";
+  
+    unsigned int childLength = 0;
+
+    va_list args;
+    va_start(args, format);
+    childLength = vsnprintf(NULL, 0, format, args);
+    va_end(args);
+    ++childLength;
+
+    char* child = (char*) calloc(1, childLength);
+    
+    va_start(args, format);
+    vsnprintf(child, childLength, format, args);
+    va_end(args);
+
+    unsigned int openTagLength = strlen(openTag);
+    unsigned int closeTagLength = strlen(closeTag);
+
+    char* result = (char*) calloc(1, openTagLength + (childLength - 1) + closeTagLength + 1);
+
+    strcpy(result, openTag);
+    strcat(result, child);
+    strcat(result, closeTag);
+
+    free(child);
+
+    return result;
+}
+
+// https://www.reddit.com/r/C_Programming/comments/11at6d8/generate_html_in_c/
+#define SCOPE(atStart, atEnd) for (int _scope_break = ((atStart), 1); _scope_break; _scope_break = ((atEnd), 0))
+
+#define HTML(attributes) SCOPE(fprintf(HTML_STREAM, "<html %s>", attributes), fprintf(HTML_STREAM, "</html>"))
+
+#define HEAD(attributes) SCOPE(fprintf(HTML_STREAM, "<head %s>", attributes), fprintf(HTML_STREAM, "</head>"))
+#define BODY(attributes) SCOPE(fprintf(HTML_STREAM, "<body %s>", attributes), fprintf(HTML_STREAM, "</body>"))
+
+#define H1(format, ...) fprintf(HTML_STREAM, "<h1>" format "</h1>", ##__VA_ARGS__)
+#define P(format, ...) fprintf(HTML_STREAM, "<p>" format "</p>", ##__VA_ARGS__)
+#define TITLE(format, ...) fprintf(HTML_STREAM, "<title>" format "</title>", ##__VA_ARGS__)
+#define META(attributes, ...) fprintf(HTML_STREAM, "<meta " attributes ">", ##__VA_ARGS__)
+
+#define HTML_BEGIN()\
+    size_t size;    \
+    char *buffer;   \
+                    \
+    FILE* HTML_STREAM = open_memstream(&buffer, &size); \
+    if (HTML_STREAM == NULL) {  \
+        perror("Error opening memory stream");  \
+    }   \
+
+#define HTML_COMPILE() (fclose(HTML_STREAM), buffer)
+
 HTTPResponse* index_page(HTTPConnection* con, HTTPRequest* request) {
-    return http_ok_response_file(HTTP_1_1, "index.html");
+    HTML_BEGIN()
+
+    HTML("lang='en'") {
+        HEAD("") {
+            META("charset='UTF-8'");
+            META("name='viewport' content='width=device-width, initial-scale=1.0'");
+            TITLE("Ganyu viewer");
+        }
+        BODY("") {
+            H1("Ganyu viewer 📑");
+            P("Hello world !");
+            P("This is a test article, number %d", 1);
+        }
+    } 
+
+    char* string = HTML_COMPILE();
+    return http_ok_response_flag(HTTP_1_1, string, CHTTP_FREE_MESSAGE);
 }
 
 HTTPResponse* file_page(HTTPConnection* con, HTTPRequest* request) {
