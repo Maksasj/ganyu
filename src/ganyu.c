@@ -12,27 +12,27 @@
 #include "chtml.h"
 #include "chttp/chttp.h"
 
-HTTPResponse* index_page(HTTPConnection* con, HTTPRequest* request);
-HTTPResponse* file_page(HTTPConnection* con, HTTPRequest* request);
-HTTPResponse* directory_page(HTTPConnection* con, HTTPRequest* request);
+CHTTPResponse* index_page(CHTTPConnection* con, CHTTPRequest* request);
+CHTTPResponse* file_page(CHTTPConnection* con, CHTTPRequest* request);
+CHTTPResponse* directory_page(CHTTPConnection* con, CHTTPRequest* request);
 
 int main() {
-    HTTPServer* server = http_new_server(80);
+    CHTTPServer* server = chttp_new_server(80);
 
-    http_str_route(server, "/", index_page);
-    http_glob_route(server, "/file*", file_page);
-    http_str_route(server, "/directory", directory_page);
+    chttp_str_route(server, "/", index_page);
+    chttp_glob_route(server, "/file*", file_page);
+    chttp_str_route(server, "/directory", directory_page);
 
-    while(http_running(server)) {
-        http_listen(server);
+    while(chttp_running(server)) {
+        chttp_listen(server);
     }
 
-    http_free_server(server);
+    chttp_free_server(server);
 
     return 0;
 }
 
-HTTPResponse* index_page(HTTPConnection* con, HTTPRequest* request) {
+CHTTPResponse* index_page(CHTTPConnection* con, CHTTPRequest* request) {
     HTML_BEGIN()
 
     HTML("lang='en'") {
@@ -49,24 +49,24 @@ HTTPResponse* index_page(HTTPConnection* con, HTTPRequest* request) {
     } 
 
     char* string = HTML_COMPILE();
-    return http_ok_response_flag(HTTP_1_1, string, CHTTP_FREE_MESSAGE);
+    return chttp_ok_response_flag(HTTP_1_1, string, CHTTP_FREE_MESSAGE);
 }
 
-HTTPResponse* file_page(HTTPConnection* con, HTTPRequest* request) {
+CHTTPResponse* file_page(CHTTPConnection* con, CHTTPRequest* request) {
     CHTTPGetRequestParsed* get = chttp_parse_get_request(request);
 
     if(get == NULL)
-        return http_not_found_response(HTTP_1_1, "404 Not found");
+        return chttp_not_found_response(HTTP_1_1, "404 Not found");
 
     for(int i = 0; i < get->fieldCount; ++i)
         printf("%d: '%s' = '%s'\n", i, get->fields[i]->fieldName, get->fields[i]->fieldValue);
 
     chttp_free_get_request_parsed(get);
-    return http_ok_response_file(HTTP_1_1, "file.html");
+    return chttp_ok_response_file(HTTP_1_1, "file.html");
 }
 
-HTTPResponse* directory_page(HTTPConnection* con, HTTPRequest* request) {
-    return http_ok_response_file(HTTP_1_1, "directory.html");
+CHTTPResponse* directory_page(CHTTPConnection* con, CHTTPRequest* request) {
+    return chttp_ok_response_file(HTTP_1_1, "directory.html");
 }
 
 /*
