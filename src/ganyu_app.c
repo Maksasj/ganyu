@@ -11,24 +11,26 @@ void ganyu_init_pg(GanyuApp* app, const char* propertiesFile) {
     app->pgConnection = PQconnectdb(conInfo);
 
     if (PQstatus(app->pgConnection) != CONNECTION_OK) {
-        printf("Connection to database failed: %s", PQerrorMessage(app->pgConnection));
+        CHTTP_LOG(CHTTP_ERROR, "Connection to database failed: %s", PQerrorMessage(app->pgConnection));
         PQfinish(app->pgConnection);
         exit(1);
     }
 
-    printf("Connected to the database successfully!\n");
+    CHTTP_LOG(CHTTP_INFO, "Connected to the database successfully");
 }
 
 void ganyu_init_web(GanyuApp* app) {
     app->server = chttp_new_server(80);
 
     chttp_str_route(app->server, "/", index_page);
+
     chttp_glob_route(app->server, "/files?*", files_page);
+    chttp_glob_route(app->server, "/directories?*", directories_page);
+    chttp_glob_route(app->server, "/sources?*", sources_page);
+
     chttp_glob_route(app->server, "/file?*", file_page);
-    chttp_glob_route(app->server, "/directories*", directories_page);
-    chttp_glob_route(app->server, "/directory*", directories_page);
-    chttp_glob_route(app->server, "/sources*", sources_page);
-    chttp_glob_route(app->server, "/source?*", sources_page);
+    chttp_glob_route(app->server, "/directory?*", directory_page);
+    chttp_glob_route(app->server, "/source?*", source_page);
 
     // Setting user pointer
     chttp_server_set_user_pointer(app->server, app);

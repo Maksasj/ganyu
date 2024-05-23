@@ -1,23 +1,7 @@
 #include "ganyu_app.h"
 #include "ganyu_pages.h"
 
-PGresult* ganyu_make_sql_request(CHTTPConnection* con, const char* query, const char** params, unsigned int count) {
-    GanyuApp* app = (GanyuApp*) con->server->userPtr;
-    PGconn* conn = app->pgConnection;
-
-    PGresult* res = PQexecParams(conn, query, count, NULL, params, NULL, NULL, 0);   
-    ExecStatusType resStatus = PQresultStatus(res);
-
-    if (resStatus != PGRES_TUPLES_OK) {
-        PQclear(res);
-        return NULL;
-    }
-
-    return res;
-}
-
-CHTTPResponse* files_page(CHTTPConnection* con, CHTTPRequest* request) {
-
+CHTTPResponse* sources_page(CHTTPConnection* con, CHTTPRequest* request) {
     CHTTPGetRequestParsed* get = chttp_parse_get_request(request);
 
     if(get == NULL)
@@ -40,6 +24,24 @@ CHTTPResponse* files_page(CHTTPConnection* con, CHTTPRequest* request) {
         endRange = startRange;
         startRange = saved;
     }
+
+    char* params[2] = {
+        startField->fieldValue,
+        endField->fieldValue
+    };
+
+    PGresult *sourceRes = ganyu_make_sql_request(con, 
+        "SELECT * \
+        FROM maja8801.Source AS S \
+        WHERE (S.ID > $1) AND (S.ID < $2);", (const char**) params, 2);
+    
+    if(sourceRes == NULL) {
+        CHTTP_LOG(CHTTP_ERROR, "Failed to execute sql request");
+        return not_found_page(con, request);
+    }
+
+    int rows = PQntuples(sourceRes);
+    int cols = PQnfields(sourceRes);
 
     HTML_BEGIN()
 
@@ -68,16 +70,13 @@ CHTTPResponse* files_page(CHTTPConnection* con, CHTTPRequest* request) {
                 TABLE("style='width:100%'") {
                     TR("") {
                         TD("style='width:10%'") {
-                            B("File ID");
-                        }
-                        TD("style='width:40%'") {
-                            B("File name");
-                        }
-                        TD("style='width:10%'") {
-                            B("File size");
+                            B("Source ID");
                         }
                         TD("style='width:20%'") {
                             B("Source name");
+                        }
+                        TD("style='width:50%'") {
+                            B("Source description");
                         }
                         TD("style='width:20%'") {
                             B("Action");
@@ -88,34 +87,14 @@ CHTTPResponse* files_page(CHTTPConnection* con, CHTTPRequest* request) {
                 HR("style='border-top: 3px solid #bbb; border-radius: 5px;'");
             }
 
-            char* params[2] = {
-                startField->fieldValue,
-                endField->fieldValue
-            };
-
-            PGresult *res = ganyu_make_sql_request(con, 
-                "SELECT VF.ID, VF.FileName, VF.FileExtension, VF.FileSize, S.ID, S.sourceName \
-                FROM maja8801.VirtualFile AS VF \
-                JOIN maja8801.Source AS S ON VF.SourceID = S.ID \
-                WHERE (VF.ID > $1) AND (VF.ID < $2);", (const char**) params, 2);
-            
-            if(res == NULL) {
-                CHTTP_LOG(CHTTP_ERROR, "Failed to execute sql request");
-                continue;
-            }
-
-            int rows = PQntuples(res);
-            int cols = PQnfields(res);
-
             // Search result
             DIV("style='overflow: scroll;height:60%;width:100%'") {
                 for(int i = 0; i < rows; ++i) {
-                    char* id = PQgetvalue(res, i, 0);
-                    char* fileName = PQgetvalue(res, i, 1);
-                    char* fileExtension = PQgetvalue(res, i, 2);
-                    char* fileSize = PQgetvalue(res, i, 3);
-                    char* sourceId = PQgetvalue(res, i, 4);
-                    char* sourceName = PQgetvalue(res, i, 5);
+                    char* id = PQgetvalue(sourceRes, i, 0);
+                    char* sourceName = PQgetvalue(sourceRes, i, 1);
+                    char* sourceDescription = PQgetvalue(sourceRes, i, 2);
+                    char* sourceType = PQgetvalue(sourceRes, i, 3);
+                    char* sourceRootDestination = PQgetvalue(sourceRes, i, 4);
 
                     DIV("") {
                         TABLE("style='width:100%'") {
@@ -123,18 +102,15 @@ CHTTPResponse* files_page(CHTTPConnection* con, CHTTPRequest* request) {
                                 TD("style='width:10%'") { STRING("%s", id); }
 
                                 // File name
-                                TD("style='width:40%'") { 
-                                    A("href='/file?id=%s' style='margin-right: inherit;'", id) { 
-                                        STRING("%s %s%s", ganyu_file_extension_to_icon(fileExtension), fileName, fileExtension); 
+                                TD("style='width:20%'") { 
+                                    A("href='/source?id=%s' style='margin-right: inherit;'", id) { 
+                                        STRING("%s", sourceName); 
                                     } 
                                 }
-                                TD("style='width:10%'") { STRING("%s bytes", fileSize); }
-                                TD("style='width:20%'") { 
-                                    A("href='/source?id=%s'", sourceId) { STRING("%s", sourceName); }
-                                }
+                                TD("style='width:50%'") { STRING("%s", sourceDescription); }
                                 TD("style='width:20%'") {
-                                    A("href='/file' style='float: right; margin-right: 5px;'") { STRING("edit ✏️"); }
-                                    A("href='/file' style='float: right; margin-right: 5px;'") { STRING("delete 🗑️"); }
+                                    A("href='/source?id=%s' style='float: right; margin-right: 5px;'", id) { STRING("edit ✏️"); }
+                                    A("href='/source?id=%s' style='float: right; margin-right: 5px;'", id) { STRING("delete 🗑️"); }
                                 }
                             }
                         }
@@ -143,10 +119,10 @@ CHTTPResponse* files_page(CHTTPConnection* con, CHTTPRequest* request) {
                     }
                 }
             }
-
-            PQclear(res);
         }
     } 
+
+    PQclear(sourceRes);
 
     chttp_free_get_request_parsed(get);
 

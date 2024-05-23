@@ -1,10 +1,11 @@
 #include "ganyu_pages.h"
+#include "ganyu_app.h"
 
 void navigation_element(FILE* HTML_STREAM) {
     A("href='/' style='margin-right: 7px;'") { STRING("Main 🌍"); }
     A("href='/files?start=0&end=100' style='margin-right: 7px;'") { STRING("Files 📑"); }
     A("href='/directories?start=0&end=100' style='margin-right: 7px;'") { STRING("Directories 📂"); }
-    A("href='/sources' style='margin-right: 7px;'") { STRING("Sources 🗄️"); }
+    A("href='/sources?start=0&end=100' style='margin-right: 7px;'") { STRING("Sources 🗄️"); }
 }
 
 char* ganyu_file_extension_to_icon(char* ext) {
@@ -50,4 +51,32 @@ char* ganyu_file_extension_to_icon(char* ext) {
     }
 
     return "📃";
+}
+
+char* ganyu_source_type_to_icon(char* ext) {
+    if(strcmp(ext, "WEB             ") == 0)
+        return "🌐";
+
+    if(strcmp(ext, "PHYSICAL        ") == 0)
+        return "💿";
+
+    if(strcmp(ext, "REMOTE          ") == 0)
+        return "☁️";
+
+    return "🪬";
+}
+
+PGresult* ganyu_make_sql_request(CHTTPConnection* con, const char* query, const char** params, unsigned int count) {
+    GanyuApp* app = (GanyuApp*) con->server->userPtr;
+    PGconn* conn = app->pgConnection;
+
+    PGresult* res = PQexecParams(conn, query, count, NULL, params, NULL, NULL, 0);   
+    ExecStatusType resStatus = PQresultStatus(res);
+
+    if (resStatus != PGRES_TUPLES_OK) {
+        PQclear(res);
+        return NULL;
+    }
+
+    return res;
 }
