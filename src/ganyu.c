@@ -1,93 +1,18 @@
-#include <libssh2.h>
-#include <libpq-fe.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <unistd.h>
-
-#include "ganyu_properties.h"
-
-#include "chtml.h"
-#include "chttp/chttp.h"
-
-CHTTPResponse* index_page(CHTTPConnection* con, CHTTPRequest* request);
-CHTTPResponse* file_page(CHTTPConnection* con, CHTTPRequest* request);
-CHTTPResponse* directory_page(CHTTPConnection* con, CHTTPRequest* request);
+#include "ganyu_app.h"
 
 int main() {
-    CHTTPServer* server = chttp_new_server(80);
+    GanyuApp app;
 
-    chttp_str_route(server, "/", index_page);
-    chttp_glob_route(server, "/file*", file_page);
-    chttp_str_route(server, "/directory", directory_page);
-
-    while(chttp_running(server)) {
-        chttp_listen(server);
-    }
-
-    chttp_free_server(server);
+    ganyu_init(&app, "properties.ganyu.txt");
+    ganyu_start(&app);
+    ganyu_exit(&app);
 
     return 0;
 }
 
-CHTTPResponse* index_page(CHTTPConnection* con, CHTTPRequest* request) {
-    HTML_BEGIN()
-
-    HTML("lang='en'") {
-        HEAD("") {
-            META("charset='UTF-8'");
-            META("name='viewport' content='width=device-width, initial-scale=1.0'");
-            TITLE("Ganyu viewer");
-        }
-        BODY("") {
-            H1("Ganyu viewer 📑");
-            P("Hello world !");
-            P("This is a test article, number %d", 1);
-        }
-    } 
-
-    char* string = HTML_COMPILE();
-    return chttp_ok_response_flag(HTTP_1_1, string, CHTTP_FREE_MESSAGE);
-}
-
-CHTTPResponse* file_page(CHTTPConnection* con, CHTTPRequest* request) {
-    CHTTPGetRequestParsed* get = chttp_parse_get_request(request);
-
-    if(get == NULL)
-        return chttp_not_found_response(HTTP_1_1, "404 Not found");
-
-    for(int i = 0; i < get->fieldCount; ++i)
-        printf("%d: '%s' = '%s'\n", i, get->fields[i]->fieldName, get->fields[i]->fieldValue);
-
-    chttp_free_get_request_parsed(get);
-    return chttp_ok_response_file(HTTP_1_1, "file.html");
-}
-
-CHTTPResponse* directory_page(CHTTPConnection* con, CHTTPRequest* request) {
-    return chttp_ok_response_file(HTTP_1_1, "directory.html");
-}
-
 /*
+
 int main() {
-    GanyuProperties properties;
-    ganyu_load_properties(&properties, "properties.ganyu.txt");
-
-    char conInfo[4096] = { '\0' };
-    sprintf(conInfo, "dbname='%s' host='%s' port='%d' user='%s' password='%s'", properties.database, properties.host, properties.port, properties.user, properties.password);
-
-    PGconn *conn = PQconnectdb(conInfo);
-
-    if (PQstatus(conn) != CONNECTION_OK) {
-        printf("Connection to database failed: %s", PQerrorMessage(conn));
-        PQfinish(conn);
-        return -1;
-    }
-
-    printf("Connected to the database successfully!\n");
-
-
  // We have successfully established a connection to the database server
     printf("Connection Established\n");
     printf("Port: %s\n", PQport(conn));
