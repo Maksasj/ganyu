@@ -19,6 +19,12 @@ CHTTPResponse* index_page(CHTTPConnection* con, CHTTPRequest* request) {
         }
     } 
 
+    GANYU_LOG(CHTTP_INFO, "Started HTML compilation");
+
     char* string = HTML_COMPILE();
-    return chttp_ok_response_flag(HTTP_1_1, string, CHTTP_FREE_MESSAGE);
+
+    CHTTPResponse* response = chttp_ok_response(HTTP_1_1, string); 
+    free(string);
+
+    return response; 
 }

@@ -71,9 +71,8 @@ PGresult* ganyu_make_sql_request(CHTTPConnection* con, const char* query, const 
     PGconn* conn = app->pgConnection;
 
     PGresult* res = PQexecParams(conn, query, count, NULL, params, NULL, NULL, 0);   
-    ExecStatusType resStatus = PQresultStatus(res);
 
-    if (resStatus != PGRES_TUPLES_OK) {
+    if (PQresultStatus(res) != PGRES_TUPLES_OK) {
         PQclear(res);
         return NULL;
     }

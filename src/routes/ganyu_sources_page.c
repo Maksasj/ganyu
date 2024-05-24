@@ -36,7 +36,7 @@ CHTTPResponse* sources_page(CHTTPConnection* con, CHTTPRequest* request) {
         WHERE (S.ID > $1) AND (S.ID < $2);", (const char**) params, 2);
     
     if(sourceRes == NULL) {
-        CHTTP_LOG(CHTTP_ERROR, "Failed to execute sql request");
+        GANYU_LOG(CHTTP_ERROR, "Failed to execute sql request");
         return not_found_page(con, request);
     }
 
@@ -123,9 +123,12 @@ CHTTPResponse* sources_page(CHTTPConnection* con, CHTTPRequest* request) {
     } 
 
     PQclear(sourceRes);
-
     chttp_free_get_request_parsed(get);
 
     char* string = HTML_COMPILE();
-    return chttp_ok_response_flag(HTTP_1_1, string, CHTTP_FREE_MESSAGE);
+
+    CHTTPResponse* response = chttp_ok_response(HTTP_1_1, string); 
+    free(string);
+
+    return response; 
 }

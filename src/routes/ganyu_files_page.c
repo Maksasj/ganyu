@@ -37,7 +37,7 @@ CHTTPResponse* files_page(CHTTPConnection* con, CHTTPRequest* request) {
         WHERE (VF.ID > $1) AND (VF.ID < $2);", (const char**) params, 2);
     
     if(filesRes == NULL) {
-        CHTTP_LOG(CHTTP_ERROR, "Failed to execute sql request");
+        GANYU_LOG(CHTTP_ERROR, "Failed to execute sql request");
         return not_found_page(con, request);    
     }
 
@@ -131,9 +131,14 @@ CHTTPResponse* files_page(CHTTPConnection* con, CHTTPRequest* request) {
     } 
 
     PQclear(filesRes);
-
     chttp_free_get_request_parsed(get);
 
+    GANYU_LOG(CHTTP_INFO, "Started HTML compilation");
+
     char* string = HTML_COMPILE();
-    return chttp_ok_response_flag(HTTP_1_1, string, CHTTP_FREE_MESSAGE);
+
+    CHTTPResponse* response = chttp_ok_response(HTTP_1_1, string); 
+    free(string);
+
+    return response; 
 }

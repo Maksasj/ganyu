@@ -30,19 +30,19 @@ CHTTPResponse* directories_page(CHTTPConnection* con, CHTTPRequest* request) {
         endField->fieldValue
     };
 
-    PGresult *filesRes = ganyu_make_sql_request(con, 
+    PGresult *dirRes = ganyu_make_sql_request(con, 
         "SELECT VF.ID, VF.FileName, VF.FileExtension, VF.FileSize, S.ID, S.sourceName \
         FROM maja8801.VirtualFile AS VF \
         JOIN maja8801.Source AS S ON VF.SourceID = S.ID \
         WHERE (VF.ID > $1) AND (VF.ID < $2);", (const char**) params, 2);
     
-    if(filesRes == NULL) {
-        CHTTP_LOG(CHTTP_ERROR, "Failed to execute sql request");
+    if(dirRes == NULL) {
+        GANYU_LOG(CHTTP_ERROR, "Failed to execute sql request");
         return not_found_page(con, request);
     }
 
-    int rows = PQntuples(filesRes);
-    int cols = PQnfields(filesRes);
+    int rows = PQntuples(dirRes);
+    int cols = PQnfields(dirRes);
 
     HTML_BEGIN()
 
@@ -94,12 +94,12 @@ CHTTPResponse* directories_page(CHTTPConnection* con, CHTTPRequest* request) {
             // Search result
             DIV("style='overflow: scroll;height:60%;width:100%'") {
                 for(int i = 0; i < rows; ++i) {
-                    char* id = PQgetvalue(filesRes, i, 0);
-                    char* fileName = PQgetvalue(filesRes, i, 1);
-                    char* fileExtension = PQgetvalue(filesRes, i, 2);
-                    char* fileSize = PQgetvalue(filesRes, i, 3);
-                    char* sourceId = PQgetvalue(filesRes, i, 4);
-                    char* sourceName = PQgetvalue(filesRes, i, 5);
+                    char* id = PQgetvalue(dirRes, i, 0);
+                    char* fileName = PQgetvalue(dirRes, i, 1);
+                    char* fileExtension = PQgetvalue(dirRes, i, 2);
+                    char* fileSize = PQgetvalue(dirRes, i, 3);
+                    char* sourceId = PQgetvalue(dirRes, i, 4);
+                    char* sourceName = PQgetvalue(dirRes, i, 5);
 
                     DIV("") {
                         TABLE("style='width:100%'") {
@@ -130,10 +130,15 @@ CHTTPResponse* directories_page(CHTTPConnection* con, CHTTPRequest* request) {
         }
     } 
 
-    PQclear(filesRes);
-
+    PQclear(dirRes);
     chttp_free_get_request_parsed(get);
 
+    GANYU_LOG(CHTTP_INFO, "Started HTML compilation");
+
     char* string = HTML_COMPILE();
-    return chttp_ok_response_flag(HTTP_1_1, string, CHTTP_FREE_MESSAGE);
+
+    CHTTPResponse* response = chttp_ok_response(HTTP_1_1, string); 
+    free(string);
+
+    return response; 
 }

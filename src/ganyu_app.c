@@ -11,12 +11,12 @@ void ganyu_init_pg(GanyuApp* app, const char* propertiesFile) {
     app->pgConnection = PQconnectdb(conInfo);
 
     if (PQstatus(app->pgConnection) != CONNECTION_OK) {
-        CHTTP_LOG(CHTTP_ERROR, "Connection to database failed: %s", PQerrorMessage(app->pgConnection));
+        GANYU_LOG(CHTTP_ERROR, "Connection to database failed: %s", PQerrorMessage(app->pgConnection));
         PQfinish(app->pgConnection);
         exit(1);
     }
 
-    CHTTP_LOG(CHTTP_INFO, "Connected to the database successfully");
+    GANYU_LOG(CHTTP_INFO, "Connected to the database successfully");
 }
 
 void ganyu_init_web(GanyuApp* app) {

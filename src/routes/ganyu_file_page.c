@@ -23,7 +23,7 @@ CHTTPResponse* file_page(CHTTPConnection* con, CHTTPRequest* request) {
     WHERE VF.ID = $1;", (const char**) params, 1);
 
     if(fileRes == NULL) {
-        CHTTP_LOG(CHTTP_ERROR, "Failed to execute SQL request");
+        GANYU_LOG(CHTTP_ERROR, "Failed to execute SQL request");
         return not_found_page(con, request);
     }
 
@@ -31,7 +31,7 @@ CHTTPResponse* file_page(CHTTPConnection* con, CHTTPRequest* request) {
     int fileMetaCols = PQnfields(fileRes);
 
     if((fileMetaRows <= 0) || (fileMetaCols <= 0)) {
-        CHTTP_LOG(CHTTP_ERROR, "File not found");
+        GANYU_LOG(CHTTP_ERROR, "File not found");
         return not_found_page(con, request);
     }
 
@@ -59,7 +59,7 @@ CHTTPResponse* file_page(CHTTPConnection* con, CHTTPRequest* request) {
     JOIN VirtualDirectories ON VD.ID = VirtualDirectories.ID;", (const char**) params, 1);
 
     if(dirRes == NULL) {
-        CHTTP_LOG(CHTTP_ERROR, "Failed to execute SQL request");
+        GANYU_LOG(CHTTP_ERROR, "Failed to execute SQL request");
         return not_found_page(con, request);
     }
 
@@ -194,6 +194,12 @@ CHTTPResponse* file_page(CHTTPConnection* con, CHTTPRequest* request) {
 
     chttp_free_get_request_parsed(get);
 
+    GANYU_LOG(CHTTP_INFO, "Started HTML compilation");
+
     char* string = HTML_COMPILE();
-    return chttp_ok_response_flag(HTTP_1_1, string, CHTTP_FREE_MESSAGE);
+
+    CHTTPResponse* response = chttp_ok_response(HTTP_1_1, string); 
+    free(string);
+
+    return response; 
 }

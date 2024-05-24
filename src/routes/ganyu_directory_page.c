@@ -23,7 +23,7 @@ CHTTPResponse* directory_page(CHTTPConnection* con, CHTTPRequest* request) {
 
     if(dirRes == NULL) {
         PQclear(dirRes);
-        CHTTP_LOG(CHTTP_ERROR, "Failed to execute SQL request");
+        GANYU_LOG(CHTTP_ERROR, "Failed to execute SQL request");
         return not_found_page(con, request);
     }
 
@@ -31,7 +31,7 @@ CHTTPResponse* directory_page(CHTTPConnection* con, CHTTPRequest* request) {
     int directoryCols = PQnfields(dirRes);
 
     if((directoryRows <= 0) || (directoryCols <= 0)) {
-        CHTTP_LOG(CHTTP_ERROR, "Directory not found");
+        GANYU_LOG(CHTTP_ERROR, "Directory not found");
         return not_found_page(con, request);
     }
 
@@ -84,9 +84,14 @@ CHTTPResponse* directory_page(CHTTPConnection* con, CHTTPRequest* request) {
     } 
 
     PQclear(dirRes);
-
     chttp_free_get_request_parsed(get);
 
+    GANYU_LOG(CHTTP_INFO, "Started HTML compilation");
+
     char* string = HTML_COMPILE();
-    return chttp_ok_response_flag(HTTP_1_1, string, CHTTP_FREE_MESSAGE);
+
+    CHTTPResponse* response = chttp_ok_response(HTTP_1_1, string); 
+    free(string);
+
+    return response; 
 }

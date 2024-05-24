@@ -1,10 +1,14 @@
 #ifndef GANYU_PAGES_H
 #define GANYU_PAGES_H
 
+#include "ganyu_utils.h"
+
 #include <libpq-fe.h>
+#include <stdlib.h>
 
 #include "chtml.h"
 #include "chttp/chttp.h"
+#include "ganyu_utils.h"
 
 CHTTPResponse* index_page(CHTTPConnection* con, CHTTPRequest* request);
 CHTTPResponse* files_page(CHTTPConnection* con, CHTTPRequest* request);
