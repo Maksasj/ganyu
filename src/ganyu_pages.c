@@ -3,9 +3,10 @@
 
 void navigation_element(FILE* HTML_STREAM) {
     A("href='/' style='margin-right: 7px;'") { STRING("Main 🌍"); }
-    A("href='/files?start=0&end=100' style='margin-right: 7px;'") { STRING("Files 📑"); }
-    A("href='/directories?start=0&end=100' style='margin-right: 7px;'") { STRING("Directories 📂"); }
-    A("href='/sources?start=0&end=100' style='margin-right: 7px;'") { STRING("Sources 🗄️"); }
+    A("href='/files' style='margin-right: 7px;'") { STRING("Files 📑"); }
+    A("href='/directories' style='margin-right: 7px;'") { STRING("Directories 📂"); }
+    A("href='/sources' style='margin-right: 7px;'") { STRING("Sources 🗄️"); }
+    A("href='/catalog' style='margin-right: 7px;'") { STRING("Catalog 📦"); }
 }
 
 char* ganyu_file_extension_to_icon(char* ext) {

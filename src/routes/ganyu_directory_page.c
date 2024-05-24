@@ -55,7 +55,7 @@ CHTTPResponse* directory_page(CHTTPConnection* con, CHTTPRequest* request) {
                 navigation_element(HTML_STREAM);
             }
 
-            H2("Directory📂 %s overview", directoryName);
+            H2("Directory📂 '%s' overview", directoryName);
             HR("style='border-top: 2px solid #bbb;'");
 
             DIV("style='width:100%; display:flex;'") {

@@ -2,33 +2,22 @@
 #include "ganyu_pages.h"
 
 CHTTPResponse* files_page(CHTTPConnection* con, CHTTPRequest* request) {
+    char* start = "0";
+    char* end = "100";
+
     CHTTPGetRequestParsed* get = chttp_parse_get_request(request);
 
-    if(get == NULL)
-        return not_found_page(con, request);
+    if(get != NULL) {
+        CHTTPGetField* startField = chttp_get_request_parsed_find_field(get, "start");
+        CHTTPGetField* endField = chttp_get_request_parsed_find_field(get, "end");
 
-    CHTTPGetField* startField = chttp_get_request_parsed_find_field(get, "start");
-    CHTTPGetField* endField = chttp_get_request_parsed_find_field(get, "end");
-
-    if(startField == NULL)
-        return not_found_page(con, request);
-
-    if(endField == NULL)
-        return not_found_page(con, request);
-
-    int startRange = atoi(startField->fieldValue);
-    int endRange = atoi(endField->fieldValue);
-
-    if(startRange > endRange) {
-        int saved = endRange;
-        endRange = startRange;
-        startRange = saved;
+        if((startField != NULL) && (endField != NULL)) {
+            start = startField->fieldValue;
+            end = endField->fieldValue;
+        }
     }
-
-    char* params[2] = {
-        startField->fieldValue,
-        endField->fieldValue
-    };
+    
+    char* params[2] = { start, end };
 
     PGresult *filesRes = ganyu_make_sql_request(con, 
         "SELECT VF.ID, VF.FileName, VF.FileExtension, VF.FileSize, S.ID, S.sourceName \
@@ -59,32 +48,22 @@ CHTTPResponse* files_page(CHTTPConnection* con, CHTTPRequest* request) {
 
                 H2("Files");
                 SPAN("") {
-                    STRING("Database contains total 12752 files, showing [%d: %d] range", startRange, endRange);
+                    STRING("Database contains total 12752 files, showing [%d: %d] range", 0, 1);
                 }
 
                 FORM("action='/files' method='get'") {
-                    INPUT("type='number' name='start' value='%d'", startRange);
-                    INPUT("type='number' name='end' value='%d'", endRange);
+                    INPUT("type='number' name='start' value='%d'", 0);
+                    INPUT("type='number' name='end' value='%d'", 1);
                     INPUT("type='submit' value='Show'");\
                 }
 
                 TABLE("style='width:100%'") {
                     TR("") {
-                        TD("style='width:10%'") {
-                            B("File ID");
-                        }
-                        TD("style='width:40%'") {
-                            B("File name");
-                        }
-                        TD("style='width:10%'") {
-                            B("File size");
-                        }
-                        TD("style='width:20%'") {
-                            B("Source name");
-                        }
-                        TD("style='width:20%'") {
-                            B("Action");
-                        }
+                        TD("style='width:5%'") { B("ID"); }
+                        TD("style='width:50%'") { B("File name"); }
+                        TD("style='width:10%'") { B("File size"); }
+                        TD("style='width:20%'") { B("Source name"); }
+                        TD("style='width:15%'") { B("Action"); }
                     }
                 }
 
@@ -104,10 +83,10 @@ CHTTPResponse* files_page(CHTTPConnection* con, CHTTPRequest* request) {
                     DIV("") {
                         TABLE("style='width:100%'") {
                             TR("") {
-                                TD("style='width:10%'") { STRING("%s", id); }
+                                TD("style='width:5%'") { STRING("%s", id); }
 
                                 // File name
-                                TD("style='width:40%'") { 
+                                TD("style='width:50%'") { 
                                     A("href='/file?id=%s' style='margin-right: inherit;'", id) { 
                                         STRING("%s %s%s", ganyu_file_extension_to_icon(fileExtension), fileName, fileExtension); 
                                     } 
@@ -116,7 +95,7 @@ CHTTPResponse* files_page(CHTTPConnection* con, CHTTPRequest* request) {
                                 TD("style='width:20%'") { 
                                     A("href='/source?id=%s'", sourceId) { STRING("%s", sourceName); }
                                 }
-                                TD("style='width:20%'") {
+                                TD("style='width:15%'") {
                                     A("href='/file?id=%s' style='float: right; margin-right: 5px;'", id) { STRING("edit ✏️"); }
                                     A("href='/file?id=%s' style='float: right; margin-right: 5px;'", id) { STRING("delete 🗑️"); }
                                 }

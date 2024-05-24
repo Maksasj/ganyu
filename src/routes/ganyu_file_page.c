@@ -80,7 +80,7 @@ CHTTPResponse* file_page(CHTTPConnection* con, CHTTPRequest* request) {
                 navigation_element(HTML_STREAM);
             }
 
-            H2("File %s %s%s overview", ganyu_file_extension_to_icon(fileExtension), fileName, fileExtension);
+            H2("File %s '%s%s' overview", ganyu_file_extension_to_icon(fileExtension), fileName, fileExtension);
             HR("style='border-top: 2px solid #bbb;'");
 
             // Search result

@@ -48,8 +48,6 @@ CHTTPResponse* source_page(CHTTPConnection* con, CHTTPRequest* request) {
     char* sourceType = PQgetvalue(sourceRes, 0, 3);
     char* sourceRoodDestination = PQgetvalue(sourceRes, 0, 4);
 
-    printf("%s %s %s %s %s\n", sourceId, sourceName, sourceDescription, sourceType, sourceRoodDestination);
-
     GANYU_LOG(CHTTP_INFO, "Started HTML generation");
 
     HTML_BEGIN()
@@ -66,7 +64,7 @@ CHTTPResponse* source_page(CHTTPConnection* con, CHTTPRequest* request) {
                 navigation_element(HTML_STREAM);
             }
 
-            H2("Source %s %s overview", ganyu_source_type_to_icon(sourceType), sourceName);
+            H2("Source %s '%s' overview", ganyu_source_type_to_icon(sourceType), sourceName);
             HR("style='border-top: 2px solid #bbb;'");
 
             DIV("style='width:100%; display:flex;'") {

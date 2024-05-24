@@ -2,34 +2,22 @@
 #include "ganyu_pages.h"
 
 CHTTPResponse* sources_page(CHTTPConnection* con, CHTTPRequest* request) {
+    char* start = "0";
+    char* end = "100";
+    
     CHTTPGetRequestParsed* get = chttp_parse_get_request(request);
 
-    if(get == NULL)
-        return not_found_page(con, request);
+    if(get != NULL) {
+        CHTTPGetField* startField = chttp_get_request_parsed_find_field(get, "start");
+        CHTTPGetField* endField = chttp_get_request_parsed_find_field(get, "end");
 
-    CHTTPGetField* startField = chttp_get_request_parsed_find_field(get, "start");
-    CHTTPGetField* endField = chttp_get_request_parsed_find_field(get, "end");
-
-    if(startField == NULL)
-        return not_found_page(con, request);
-
-    if(endField == NULL)
-        return not_found_page(con, request);
-
-    int startRange = atoi(startField->fieldValue);
-    int endRange = atoi(endField->fieldValue);
-
-    if(startRange > endRange) {
-        int saved = endRange;
-        endRange = startRange;
-        startRange = saved;
+        if((startField != NULL) || endField != NULL) {
+            start = startField->fieldValue;
+            end = endField->fieldValue;
+        }
     }
-
-    char* params[2] = {
-        startField->fieldValue,
-        endField->fieldValue
-    };
-
+    
+    char* params[2] = { start, end };
     PGresult *sourceRes = ganyu_make_sql_request(con, 
         "SELECT * \
         FROM maja8801.Source AS S \
@@ -56,31 +44,23 @@ CHTTPResponse* sources_page(CHTTPConnection* con, CHTTPRequest* request) {
                 H1("Ganyu viewer");
                 navigation_element(HTML_STREAM);
 
-                H2("Files");
+                H2("Sources");
                 SPAN("") {
-                    STRING("Database contains total 12752 files, showing [%d: %d] range", startRange, endRange);
+                    STRING("Database contains total 5 sources, showing [%d: %d] range", 0, 1);
                 }
 
                 FORM("action='/files' method='get'") {
-                    INPUT("type='number' name='start' value='%d'", startRange);
-                    INPUT("type='number' name='end' value='%d'", endRange);
+                    INPUT("type='number' name='start' value='%d'", 0);
+                    INPUT("type='number' name='end' value='%d'", 1);
                     INPUT("type='submit' value='Show'");\
                 }
 
                 TABLE("style='width:100%'") {
                     TR("") {
-                        TD("style='width:10%'") {
-                            B("Source ID");
-                        }
-                        TD("style='width:20%'") {
-                            B("Source name");
-                        }
-                        TD("style='width:50%'") {
-                            B("Source description");
-                        }
-                        TD("style='width:20%'") {
-                            B("Action");
-                        }
+                        TD("style='width:5%'") { B("ID"); }
+                        TD("style='width:20%'") { B("Source name"); }
+                        TD("style='width:60%'") { B("Source description"); }
+                        TD("style='width:15%'") { B("Action"); }
                     }
                 }
 
@@ -89,6 +69,7 @@ CHTTPResponse* sources_page(CHTTPConnection* con, CHTTPRequest* request) {
 
             // Search result
             DIV("style='overflow: scroll;height:60%;width:100%'") {
+
                 for(int i = 0; i < rows; ++i) {
                     char* id = PQgetvalue(sourceRes, i, 0);
                     char* sourceName = PQgetvalue(sourceRes, i, 1);
@@ -99,16 +80,16 @@ CHTTPResponse* sources_page(CHTTPConnection* con, CHTTPRequest* request) {
                     DIV("") {
                         TABLE("style='width:100%'") {
                             TR("") {
-                                TD("style='width:10%'") { STRING("%s", id); }
+                                TD("style='width:5%'") { STRING("%s", id); }
 
                                 // File name
                                 TD("style='width:20%'") { 
                                     A("href='/source?id=%s' style='margin-right: inherit;'", id) { 
-                                        STRING("%s", sourceName); 
+                                        STRING("%s %s", ganyu_source_type_to_icon(sourceType), sourceName); 
                                     } 
                                 }
-                                TD("style='width:50%'") { STRING("%s", sourceDescription); }
-                                TD("style='width:20%'") {
+                                TD("style='width:60%'") { STRING("%s", sourceDescription); }
+                                TD("style='width:15%'") {
                                     A("href='/source?id=%s' style='float: right; margin-right: 5px;'", id) { STRING("edit ✏️"); }
                                     A("href='/source?id=%s' style='float: right; margin-right: 5px;'", id) { STRING("delete 🗑️"); }
                                 }

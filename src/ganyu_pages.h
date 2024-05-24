@@ -11,14 +11,15 @@
 #include "ganyu_utils.h"
 
 CHTTPResponse* index_page(CHTTPConnection* con, CHTTPRequest* request);
-CHTTPResponse* files_page(CHTTPConnection* con, CHTTPRequest* request);
 
 CHTTPResponse* file_page(CHTTPConnection* con, CHTTPRequest* request);
 CHTTPResponse* directory_page(CHTTPConnection* con, CHTTPRequest* request);
 CHTTPResponse* source_page(CHTTPConnection* con, CHTTPRequest* request);
 
+CHTTPResponse* files_page(CHTTPConnection* con, CHTTPRequest* request);
 CHTTPResponse* directories_page(CHTTPConnection* con, CHTTPRequest* request);
 CHTTPResponse* sources_page(CHTTPConnection* con, CHTTPRequest* request);
+CHTTPResponse* catalog_page(CHTTPConnection* con, CHTTPRequest* request);
 
 CHTTPResponse* not_found_page(CHTTPConnection* con, CHTTPRequest* request);
 

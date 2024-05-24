@@ -24,9 +24,10 @@ void ganyu_init_web(GanyuApp* app) {
 
     chttp_str_route(app->server, "/", index_page);
 
-    chttp_glob_route(app->server, "/files?*", files_page);
-    chttp_glob_route(app->server, "/directories?*", directories_page);
-    chttp_glob_route(app->server, "/sources?*", sources_page);
+    chttp_glob_route(app->server, "/files*", files_page);
+    chttp_glob_route(app->server, "/directories*", directories_page);
+    chttp_glob_route(app->server, "/sources*", sources_page);
+    chttp_glob_route(app->server, "/catalog*", catalog_page);
 
     chttp_glob_route(app->server, "/file?*", file_page);
     chttp_glob_route(app->server, "/directory?*", directory_page);

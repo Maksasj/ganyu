@@ -2,39 +2,61 @@
 #include "ganyu_pages.h"
 
 CHTTPResponse* directories_page(CHTTPConnection* con, CHTTPRequest* request) {
+    char* start = "0";
+    char* end = "100";
+
     CHTTPGetRequestParsed* get = chttp_parse_get_request(request);
 
-    if(get == NULL)
-        return not_found_page(con, request);
+    if(get != NULL) {
+        CHTTPGetField* startField = chttp_get_request_parsed_find_field(get, "start");
+        CHTTPGetField* endField = chttp_get_request_parsed_find_field(get, "end");
 
-    CHTTPGetField* startField = chttp_get_request_parsed_find_field(get, "start");
-    CHTTPGetField* endField = chttp_get_request_parsed_find_field(get, "end");
-
-    if(startField == NULL)
-        return not_found_page(con, request);
-
-    if(endField == NULL)
-        return not_found_page(con, request);
-
-    int startRange = atoi(startField->fieldValue);
-    int endRange = atoi(endField->fieldValue);
-
-    if(startRange > endRange) {
-        int saved = endRange;
-        endRange = startRange;
-        startRange = saved;
+        if((startField != NULL) && (endField != NULL)) {
+            start = startField->fieldValue;
+            end = endField->fieldValue;
+        }
     }
-
-    char* params[2] = {
-        startField->fieldValue,
-        endField->fieldValue
-    };
-
+    
+    char* params[2] = { start, end };
     PGresult *dirRes = ganyu_make_sql_request(con, 
-        "SELECT VF.ID, VF.FileName, VF.FileExtension, VF.FileSize, S.ID, S.sourceName \
-        FROM maja8801.VirtualFile AS VF \
-        JOIN maja8801.Source AS S ON VF.SourceID = S.ID \
-        WHERE (VF.ID > $1) AND (VF.ID < $2);", (const char**) params, 2);
+        "WITH  \
+        STEP0(ID, directoryName, directoryDescription) AS ( \
+            SELECT  \
+                VD.ID,  \
+                VD.directoryName,  \
+                VD.directoryDescription \
+            FROM maja8801.VirtualDirectory AS VD \
+            WHERE (VD.ID > $1) AND (VD.ID < $2) \
+        ), \
+        STEP1(ID, directoryName, directoryDescription, storedDirs) AS ( \
+            SELECT  \
+                VD.ID,  \
+                VD.directoryName,  \
+                VD.directoryDescription,  \
+                COUNT(VDS.TargetVirtualDirectoryID) \
+            FROM STEP0 AS VD \
+            LEFT JOIN VirtualDirectoryStored AS VDS  \
+                ON VD.ID = VDS.TargetVirtualDirectoryID \
+            GROUP BY  \
+                VD.ID,  \
+                VD.directoryName,  \
+                VD.directoryDescription \
+        ) \
+        SELECT  \
+            VD.ID,  \
+            VD.directoryName,  \
+            VD.directoryDescription,  \
+            VD.storedDirs,  \
+            COUNT(VFS.VirtualDirectoryID) \
+        FROM STEP1 AS VD \
+        LEFT JOIN VirtualFileStored AS VFS  \
+            ON VD.ID = VFS.VirtualDirectoryID \
+        GROUP BY  \
+            VD.ID,  \
+            VD.directoryName,  \
+            VD.directoryDescription, \
+            VD.storedDirs \
+        ORDER BY VD.ID;", (const char**) params, 2);
     
     if(dirRes == NULL) {
         GANYU_LOG(CHTTP_ERROR, "Failed to execute sql request");
@@ -57,34 +79,24 @@ CHTTPResponse* directories_page(CHTTPConnection* con, CHTTPRequest* request) {
                 H1("Ganyu viewer");
                 navigation_element(HTML_STREAM);
 
-                H2("Files");
+                H2("Directories");
                 SPAN("") {
-                    STRING("Database contains total 12752 files, showing [%d: %d] range", startRange, endRange);
+                    STRING("Database contains total 5 directories, showing [%d: %d] range", 0, 1);
                 }
 
                 FORM("action='/files' method='get'") {
-                    INPUT("type='number' name='start' value='%d'", startRange);
-                    INPUT("type='number' name='end' value='%d'", endRange);
-                    INPUT("type='submit' value='Show'");\
+                    INPUT("type='number' name='start' value='%d'", 0);
+                    INPUT("type='number' name='end' value='%d'", 1);
+                    INPUT("type='submit' value='Show'");
                 }
 
                 TABLE("style='width:100%'") {
                     TR("") {
-                        TD("style='width:10%'") {
-                            B("File ID");
-                        }
-                        TD("style='width:40%'") {
-                            B("File name");
-                        }
-                        TD("style='width:10%'") {
-                            B("File size");
-                        }
-                        TD("style='width:20%'") {
-                            B("Source name");
-                        }
-                        TD("style='width:20%'") {
-                            B("Action");
-                        }
+                        TD("style='width:5%'") { B("ID"); }
+                        TD("style='width:20%'") { B("Directory name"); }
+                        TD("style='width:30%'") { B("Directory stores"); }
+                        TD("style='width:30%'") { B("Directory description"); }
+                        TD("style='width:15%'") { B("Action"); }
                     }
                 }
 
@@ -93,30 +105,27 @@ CHTTPResponse* directories_page(CHTTPConnection* con, CHTTPRequest* request) {
 
             // Search result
             DIV("style='overflow: scroll;height:60%;width:100%'") {
+
                 for(int i = 0; i < rows; ++i) {
                     char* id = PQgetvalue(dirRes, i, 0);
-                    char* fileName = PQgetvalue(dirRes, i, 1);
-                    char* fileExtension = PQgetvalue(dirRes, i, 2);
-                    char* fileSize = PQgetvalue(dirRes, i, 3);
-                    char* sourceId = PQgetvalue(dirRes, i, 4);
-                    char* sourceName = PQgetvalue(dirRes, i, 5);
+                    char* dirName = PQgetvalue(dirRes, i, 1);
+                    char* dirDescription = PQgetvalue(dirRes, i, 2);
+                    char* dirStored = PQgetvalue(dirRes, i, 3);
+                    char* filesStored = PQgetvalue(dirRes, i, 4);
 
                     DIV("") {
                         TABLE("style='width:100%'") {
                             TR("") {
-                                TD("style='width:10%'") { STRING("%s", id); }
+                                TD("style='width:5%'") { STRING("%s", id); }
 
-                                // File name
-                                TD("style='width:40%'") { 
-                                    A("href='/file?id=%s' style='margin-right: inherit;'", id) { 
-                                        STRING("%s %s%s", ganyu_file_extension_to_icon(fileExtension), fileName, fileExtension); 
-                                    } 
-                                }
-                                TD("style='width:10%'") { STRING("%s bytes", fileSize); }
                                 TD("style='width:20%'") { 
-                                    A("href='/source?id=%s'", sourceId) { STRING("%s", sourceName); }
+                                    A("href='/directory?id=%s' style='margin-right: inherit;'", id) { 
+                                        STRING("📂 %s", dirName); 
+                                    }
                                 }
-                                TD("style='width:20%'") {
+                                TD("style='width:30%'") { STRING("Stores %s directories, %s files", dirStored, filesStored); }
+                                TD("style='width:30%'") { STRING("%s", dirDescription); }
+                                TD("style='width:15%'") {
                                     A("href='/directory?id=%s' style='float: right; margin-right: 5px;'", id) { STRING("edit ✏️"); }
                                     A("href='/directory?id=%s' style='float: right; margin-right: 5px;'", id) { STRING("delete 🗑️"); }
                                 }
