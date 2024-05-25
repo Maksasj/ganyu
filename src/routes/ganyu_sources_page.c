@@ -4,7 +4,8 @@
 CHTTPResponse* sources_page(CHTTPConnection* con, CHTTPRequest* request) {
     char* start = "0";
     char* end = "100";
-    
+    char* name = "%";
+
     CHTTPGetRequestParsed* get = chttp_parse_get_request(request);
 
     if(get != NULL) {
@@ -15,17 +16,29 @@ CHTTPResponse* sources_page(CHTTPConnection* con, CHTTPRequest* request) {
             start = startField->fieldValue;
             end = endField->fieldValue;
         }
+
+        CHTTPGetField* nameField = chttp_get_request_parsed_find_field(get, "name");
+
+        if(nameField != NULL)
+            name = nameField->fieldValue;
     }
     
-    char* params[2] = { start, end };
+    char* params[3] = { start, end, name };
+
     PGresult *sourceRes = ganyu_make_sql_request(con, 
         "SELECT * \
         FROM maja8801.Source AS S \
-        WHERE (S.ID > $1) AND (S.ID < $2);", (const char**) params, 2);
+        WHERE (S.ID > $1) AND (S.ID < $2) AND (S.sourceName LIKE $3);", (const char**) params, 3);
     
     if(sourceRes == NULL) {
         GANYU_LOG(CHTTP_ERROR, "Failed to execute sql request");
         return not_found_page(con, request);
+    }
+
+    char* count = "0";
+    PGresult *sourceCount = ganyu_make_sql_request(con, "SELECT COUNT(*) FROM maja8801.Source;", NULL, 0);
+    if(sourceCount != NULL) {
+        count = PQgetvalue(sourceCount, 0, 0);
     }
 
     int rows = PQntuples(sourceRes);
@@ -45,14 +58,20 @@ CHTTPResponse* sources_page(CHTTPConnection* con, CHTTPRequest* request) {
                 navigation_element(HTML_STREAM);
 
                 H2("Sources");
-                SPAN("") {
-                    STRING("Database contains total 5 sources, showing [%d: %d] range", 0, 1);
+
+                FORM("action='/sources' method='get'") {
+                    B("Filter by source ID range");
+                    INPUT("type='number' style='width:50px;margin-left:10px;' name='start' value='%s'", start);
+                    INPUT("type='number' style='width:50px;' name='end' value='%s'", end);
+                    INPUT("type='submit' value='Filter' value='%s' style='margin-right: 10px;'", name);
+
+                    I("Database contains total %s sources, showing [%s: %s] range", count, start, end);
                 }
 
-                FORM("action='/files' method='get'") {
-                    INPUT("type='number' name='start' value='%d'", 0);
-                    INPUT("type='number' name='end' value='%d'", 1);
-                    INPUT("type='submit' value='Show'");\
+                FORM("action='/sources' method='get'") {
+                    B("Filter by source name");
+                    INPUT("type='text' name='name' style='margin-left: 10px;'");
+                    INPUT("type='submit' value='Filter' style='margin-right: 10px;'");
                 }
 
                 TABLE("style='width:100%'") {
@@ -91,7 +110,7 @@ CHTTPResponse* sources_page(CHTTPConnection* con, CHTTPRequest* request) {
                                 TD("style='width:60%'") { STRING("%s", sourceDescription); }
                                 TD("style='width:15%'") {
                                     A("href='/source?id=%s' style='float: right; margin-right: 5px;'", id) { STRING("edit ✏️"); }
-                                    A("href='/source?id=%s' style='float: right; margin-right: 5px;'", id) { STRING("delete 🗑️"); }
+                                    A("href='/delsrc?id=%s' style='float: right; margin-right: 5px;'", id) { STRING("delete 🗑️"); }
                                 }
                             }
                         }
@@ -103,6 +122,7 @@ CHTTPResponse* sources_page(CHTTPConnection* con, CHTTPRequest* request) {
         }
     } 
 
+    PQclear(sourceCount);
     PQclear(sourceRes);
     chttp_free_get_request_parsed(get);
 

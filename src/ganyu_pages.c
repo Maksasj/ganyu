@@ -7,6 +7,7 @@ void navigation_element(FILE* HTML_STREAM) {
     A("href='/directories' style='margin-right: 7px;'") { STRING("Directories 📂"); }
     A("href='/sources' style='margin-right: 7px;'") { STRING("Sources 🗄️"); }
     A("href='/catalog' style='margin-right: 7px;'") { STRING("Catalog 📦"); }
+    A("href='/upload' style='margin-right: 7px;'") { STRING("Upload 📤"); }
 }
 
 char* ganyu_file_extension_to_icon(char* ext) {
@@ -72,8 +73,10 @@ PGresult* ganyu_make_sql_request(CHTTPConnection* con, const char* query, const 
     PGconn* conn = app->pgConnection;
 
     PGresult* res = PQexecParams(conn, query, count, NULL, params, NULL, NULL, 0);   
+    ExecStatusType status = PQresultStatus(res);
 
-    if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+    if((status != PGRES_TUPLES_OK) && (status != PGRES_COMMAND_OK)) {
+        GANYU_LOG(CHTTP_ERROR, "Failed to execte SQL request: %s", PQerrorMessage(conn));
         PQclear(res);
         return NULL;
     }

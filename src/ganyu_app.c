@@ -28,10 +28,22 @@ void ganyu_init_web(GanyuApp* app) {
     chttp_glob_route(app->server, "/directories*", directories_page);
     chttp_glob_route(app->server, "/sources*", sources_page);
     chttp_glob_route(app->server, "/catalog*", catalog_page);
+    chttp_str_route(app->server, "/upload", upload_page);
 
     chttp_glob_route(app->server, "/file?*", file_page);
     chttp_glob_route(app->server, "/directory?*", directory_page);
     chttp_glob_route(app->server, "/source?*", source_page);
+    
+    chttp_glob_route(app->server, "/delfile?*", delfile_page);
+    chttp_glob_route(app->server, "/deldir?*", deldir_page);
+    chttp_glob_route(app->server, "/delsrc?*", delsrc_page);
+
+    chttp_glob_route(app->server, "/upfile?*", upfile_page);
+    chttp_glob_route(app->server, "/updir?*", updir_page);
+    chttp_glob_route(app->server, "/upsrc?*", upsrc_page);
+
+    chttp_glob_route(app->server, "/rmfilestore?*", rmfilestore_page);
+    chttp_glob_route(app->server, "/rmdirstore?*", rmdirstore_page);
 
     // Setting user pointer
     chttp_server_set_user_pointer(app->server, app);

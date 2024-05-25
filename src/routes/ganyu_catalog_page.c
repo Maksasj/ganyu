@@ -10,6 +10,8 @@ CHTTPResponse* catalog_page(CHTTPConnection* con, CHTTPRequest* request) {
 
     char* wstart = "0";
     char* wend = "100000";
+    
+    char* name = "%";
 
     CHTTPGetRequestParsed* get = chttp_parse_get_request(request);
 
@@ -37,6 +39,11 @@ CHTTPResponse* catalog_page(CHTTPConnection* con, CHTTPRequest* request) {
             wend = webEndField->fieldValue;
             wstart = webStartField->fieldValue;
         }
+
+        CHTTPGetField* nameField = chttp_get_request_parsed_find_field(get, "name");
+
+        if(nameField != NULL)
+            name = nameField->fieldValue;
     } 
 
     HTML_BEGIN()
@@ -54,10 +61,12 @@ CHTTPResponse* catalog_page(CHTTPConnection* con, CHTTPRequest* request) {
 
                 H2("Catalog");
 
-                FORM("action='/files' method='get'") {
-                    INPUT("type='number' name='start' value='%d'", 0);
-                    INPUT("type='number' name='end' value='%d'", 100);
-                    INPUT("type='submit' value='Show'");\
+                FORM("action='/catalog' method='get'") {
+                    B("Filter by file name");
+                    INPUT("type='text' name='name' style='margin-left: 10px;'");
+                    INPUT("type='submit' value='Filter' style='margin-right: 10px;'");
+
+                    I("File extension not including");
                 }
 
                 TABLE("style='width:100%'") {
@@ -74,13 +83,13 @@ CHTTPResponse* catalog_page(CHTTPConnection* con, CHTTPRequest* request) {
             // Search result
             DIV("style='height:65%; width:100%; display:flex;'") {
                 DIV("style='width:33%; overflow: scroll;'") {
-                    char* params[2] = { pstart, pend };
+                    char* params[3] = { pstart, pend, name };
 
                     PGresult *filesRes = ganyu_make_sql_request(con, 
                         "SELECT Files.ID, VF.FileName, VF.FileExtension \
                         FROM maja8801.PhysicalVirtualFile AS Files \
                         JOIN maja8801.VirtualFile AS VF ON Files.ID = VF.ID \
-                        WHERE (Files.ID > $1) AND (Files.ID < $2);", (const char**) params, 2);
+                        WHERE (Files.ID > $1) AND (Files.ID < $2) AND (VF.FileName LIKE $3);", (const char**) params, 3);
                     
                     if(filesRes == NULL) {
                         GANYU_LOG(CHTTP_ERROR, "Failed to execute sql request");
@@ -117,13 +126,13 @@ CHTTPResponse* catalog_page(CHTTPConnection* con, CHTTPRequest* request) {
                     PQclear(filesRes);
                 }
                 DIV("style='width:33%; overflow: scroll;'") {
-                    char* params[2] = { rstart, rend };
+                    char* params[3] = { rstart, rend, name };
 
                     PGresult *filesRes = ganyu_make_sql_request(con, 
                         "SELECT Files.ID, VF.FileName, VF.FileExtension \
                         FROM maja8801.RemoteVirtualFile AS Files \
                         JOIN maja8801.VirtualFile AS VF ON Files.ID = VF.ID \
-                        WHERE (Files.ID > $1) AND (Files.ID < $2);", (const char**) params, 2);
+                        WHERE (Files.ID > $1) AND (Files.ID < $2) AND (VF.FileName LIKE $3);", (const char**) params, 3);
                     
                     if(filesRes == NULL) {
                         GANYU_LOG(CHTTP_ERROR, "Failed to execute sql request");
@@ -160,13 +169,13 @@ CHTTPResponse* catalog_page(CHTTPConnection* con, CHTTPRequest* request) {
                     PQclear(filesRes);
                 }
                 DIV("style='width:33%; overflow: scroll;'") {
-                    char* params[2] = { wstart, wend };
+                    char* params[3] = { wstart, wend, name };
 
                     PGresult *filesRes = ganyu_make_sql_request(con, 
                         "SELECT Files.ID, VF.FileName, VF.FileExtension \
                         FROM maja8801.WebVirtualFile AS Files \
                         JOIN maja8801.VirtualFile AS VF ON Files.ID = VF.ID \
-                        WHERE (Files.ID > $1) AND (Files.ID < $2);", (const char**) params, 2);
+                        WHERE (Files.ID > $1) AND (Files.ID < $2) AND (VF.FileName LIKE $3);", (const char**) params, 3);
                     
                     if(filesRes == NULL) {
                         GANYU_LOG(CHTTP_ERROR, "Failed to execute sql request");

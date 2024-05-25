@@ -4,13 +4,17 @@
 CHTTPResponse* file_page(CHTTPConnection* con, CHTTPRequest* request) {
     CHTTPGetRequestParsed* get = chttp_parse_get_request(request);
 
-    if(get == NULL)
+    if(get == NULL) {
+        GANYU_LOG(CHTTP_WARNING, "Get request body is empty, returning not found page");
         return not_found_page(con, request);
+    }
 
     CHTTPGetField* idField = chttp_get_request_parsed_find_field(get, "id");
 
-    if(idField == NULL)
+    if(idField == NULL) {
+        GANYU_LOG(CHTTP_WARNING, "Id field is not present in get request, returning not found page");
         return not_found_page(con, request);
+    }
 
     char* params[1] = {
         idField->fieldValue
@@ -110,6 +114,11 @@ CHTTPResponse* file_page(CHTTPConnection* con, CHTTPRequest* request) {
                         }
 
                         TR("") {
+                            TD("") { B("Content hash"); }
+                            TD("") { STRING("%s", fileContentHash); }
+                        }
+
+                        TR("") {
                             TD("") { B("File creation date"); }
                             TD("") { STRING("%s", fileDateCreated); }
                         }
@@ -117,6 +126,11 @@ CHTTPResponse* file_page(CHTTPConnection* con, CHTTPRequest* request) {
                         TR("") {
                             TD("") { B("File modification date"); }
                             TD("") { STRING("%s", fileDateModified); }
+                        }
+
+                        TR("") {
+                            TD("") { B("Source access"); }
+                            TD("") { STRING("%s", sourceAccess); }
                         }
                     }
                 }
@@ -139,11 +153,9 @@ CHTTPResponse* file_page(CHTTPConnection* con, CHTTPRequest* request) {
                                     STRING("%s", dirName); 
                                 }
 
-                                A("href='/directory?id=%s' style='margin-right: 5px; float: right;'", dirId) { 
+                                A("href='/rmfilestore?id=%s&target=%s' style='margin-right: 5px; float: right;'", fileId, dirId) { 
                                     STRING("remove 📌"); 
                                 }
-
-                                printf("'%s'\n", dirDesciption);
 
                                 if(strcmp(dirDesciption, "") != 0) {
                                     BR();
@@ -183,7 +195,6 @@ CHTTPResponse* file_page(CHTTPConnection* con, CHTTPRequest* request) {
                     }
 
                     A("href='/source?id=%s' style='float: left; margin-right: 5px;'", sourceId) { STRING("view 👀"); }
-                    A("href='/source?id=%s' style='float: left; margin-right: 5px;'", sourceId) { STRING("edit ✏️"); }
                 }
             }
         }

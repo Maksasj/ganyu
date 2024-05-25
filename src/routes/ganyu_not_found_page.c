@@ -11,7 +11,9 @@ CHTTPResponse* not_found_page(CHTTPConnection* con, CHTTPRequest* request) {
             TITLE("Not found");
         }
         BODY("") {
-            H1("🤬 Requested resource not found 🥵");
+            DIV("style='width:100%; height:100%; display:grid; place-items: center'") {
+                H1("🤬 Requested resource not found 🥵");
+            }
         }
     } 
 

@@ -4,6 +4,7 @@
 CHTTPResponse* files_page(CHTTPConnection* con, CHTTPRequest* request) {
     char* start = "0";
     char* end = "100";
+    char* name = "%";
 
     CHTTPGetRequestParsed* get = chttp_parse_get_request(request);
 
@@ -15,15 +16,20 @@ CHTTPResponse* files_page(CHTTPConnection* con, CHTTPRequest* request) {
             start = startField->fieldValue;
             end = endField->fieldValue;
         }
+
+        CHTTPGetField* nameField = chttp_get_request_parsed_find_field(get, "name");
+
+        if(nameField != NULL)
+            name = nameField->fieldValue;
     }
     
-    char* params[2] = { start, end };
+    char* params[3] = { start, end, name };
 
     PGresult *filesRes = ganyu_make_sql_request(con, 
         "SELECT VF.ID, VF.FileName, VF.FileExtension, VF.FileSize, S.ID, S.sourceName \
         FROM maja8801.VirtualFile AS VF \
         JOIN maja8801.Source AS S ON VF.SourceID = S.ID \
-        WHERE (VF.ID > $1) AND (VF.ID < $2);", (const char**) params, 2);
+        WHERE (VF.ID > $1) AND (VF.ID < $2) AND (VF.FileName LIKE $3);", (const char**) params, 3);
     
     if(filesRes == NULL) {
         GANYU_LOG(CHTTP_ERROR, "Failed to execute sql request");
@@ -32,6 +38,12 @@ CHTTPResponse* files_page(CHTTPConnection* con, CHTTPRequest* request) {
 
     int rows = PQntuples(filesRes);
     int cols = PQnfields(filesRes);
+
+    char* count = "0";
+    PGresult *fileCount = ganyu_make_sql_request(con, "SELECT COUNT(*) FROM maja8801.VirtualFile;", NULL, 0);
+    if(fileCount != NULL) {
+        count = PQgetvalue(fileCount, 0, 0);
+    }
 
     HTML_BEGIN()
 
@@ -47,14 +59,22 @@ CHTTPResponse* files_page(CHTTPConnection* con, CHTTPRequest* request) {
                 navigation_element(HTML_STREAM);
 
                 H2("Files");
-                SPAN("") {
-                    STRING("Database contains total 12752 files, showing [%d: %d] range", 0, 1);
+
+                FORM("action='/files' method='get'") {
+                    B("Filter by file ID range");
+                    INPUT("type='number' style='width:50px;margin-left:10px;' name='start' value='%s'", start);
+                    INPUT("type='number' style='width:50px;' name='end' value='%s'", end);
+                    INPUT("type='submit' value='Filter' value='%s' style='margin-right: 10px;'", name);
+
+                    I("Database contains total %s files, showing [%s: %s] range", count, start, end);
                 }
 
                 FORM("action='/files' method='get'") {
-                    INPUT("type='number' name='start' value='%d'", 0);
-                    INPUT("type='number' name='end' value='%d'", 1);
-                    INPUT("type='submit' value='Show'");\
+                    B("Filter by file name");
+                    INPUT("type='text' name='name' style='margin-left: 10px;'");
+                    INPUT("type='submit' value='Filter' style='margin-right: 10px;'");
+
+                    I("File extension not including");
                 }
 
                 TABLE("style='width:100%'") {
@@ -72,6 +92,9 @@ CHTTPResponse* files_page(CHTTPConnection* con, CHTTPRequest* request) {
 
             // Search result
             DIV("style='overflow: scroll;height:60%;width:100%'") {
+                if(rows <= 0)
+                    H3("Not found any files with provided parameters 😿");
+
                 for(int i = 0; i < rows; ++i) {
                     char* id = PQgetvalue(filesRes, i, 0);
                     char* fileName = PQgetvalue(filesRes, i, 1);
@@ -97,7 +120,7 @@ CHTTPResponse* files_page(CHTTPConnection* con, CHTTPRequest* request) {
                                 }
                                 TD("style='width:15%'") {
                                     A("href='/file?id=%s' style='float: right; margin-right: 5px;'", id) { STRING("edit ✏️"); }
-                                    A("href='/file?id=%s' style='float: right; margin-right: 5px;'", id) { STRING("delete 🗑️"); }
+                                    A("href='/delfile?id=%s' style='float: right; margin-right: 5px;'", id) { STRING("delete 🗑️"); }
                                 }
                             }
                         }
@@ -110,6 +133,7 @@ CHTTPResponse* files_page(CHTTPConnection* con, CHTTPRequest* request) {
     } 
 
     PQclear(filesRes);
+    PQclear(fileCount);
     chttp_free_get_request_parsed(get);
 
     GANYU_LOG(CHTTP_INFO, "Started HTML compilation");

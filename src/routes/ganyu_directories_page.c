@@ -4,6 +4,7 @@
 CHTTPResponse* directories_page(CHTTPConnection* con, CHTTPRequest* request) {
     char* start = "0";
     char* end = "100";
+    char* name = "%";
 
     CHTTPGetRequestParsed* get = chttp_parse_get_request(request);
 
@@ -15,9 +16,14 @@ CHTTPResponse* directories_page(CHTTPConnection* con, CHTTPRequest* request) {
             start = startField->fieldValue;
             end = endField->fieldValue;
         }
+
+        CHTTPGetField* nameField = chttp_get_request_parsed_find_field(get, "name");
+
+        if(nameField != NULL)
+            name = nameField->fieldValue;
     }
     
-    char* params[2] = { start, end };
+    char* params[3] = { start, end, name };
     PGresult *dirRes = ganyu_make_sql_request(con, 
         "WITH  \
         STEP0(ID, directoryName, directoryDescription) AS ( \
@@ -26,7 +32,7 @@ CHTTPResponse* directories_page(CHTTPConnection* con, CHTTPRequest* request) {
                 VD.directoryName,  \
                 VD.directoryDescription \
             FROM maja8801.VirtualDirectory AS VD \
-            WHERE (VD.ID > $1) AND (VD.ID < $2) \
+            WHERE (VD.ID > $1) AND (VD.ID < $2) AND(VD.directoryName LIKE $3) \
         ), \
         STEP1(ID, directoryName, directoryDescription, storedDirs) AS ( \
             SELECT  \
@@ -56,11 +62,17 @@ CHTTPResponse* directories_page(CHTTPConnection* con, CHTTPRequest* request) {
             VD.directoryName,  \
             VD.directoryDescription, \
             VD.storedDirs \
-        ORDER BY VD.ID;", (const char**) params, 2);
+        ORDER BY VD.ID;", (const char**) params, 3);
     
     if(dirRes == NULL) {
         GANYU_LOG(CHTTP_ERROR, "Failed to execute sql request");
         return not_found_page(con, request);
+    }
+
+    char* count = "0";
+    PGresult *directoryCount = ganyu_make_sql_request(con, "SELECT COUNT(*) FROM maja8801.VirtualDirectory;", NULL, 0);
+    if(directoryCount != NULL) {
+        count = PQgetvalue(directoryCount, 0, 0);
     }
 
     int rows = PQntuples(dirRes);
@@ -80,14 +92,20 @@ CHTTPResponse* directories_page(CHTTPConnection* con, CHTTPRequest* request) {
                 navigation_element(HTML_STREAM);
 
                 H2("Directories");
-                SPAN("") {
-                    STRING("Database contains total 5 directories, showing [%d: %d] range", 0, 1);
+
+                FORM("action='/directories' method='get'") {
+                    B("Filter by directory ID range");
+                    INPUT("type='number' style='width:50px;margin-left:10px;' name='start' value='%s'", start);
+                    INPUT("type='number' style='width:50px;' name='end' value='%s'", end);
+                    INPUT("type='submit' value='Filter' value='%s' style='margin-right: 10px;'", name);
+
+                    I("Database contains total %s directories, showing [%s: %s] range", count, start, end);
                 }
 
-                FORM("action='/files' method='get'") {
-                    INPUT("type='number' name='start' value='%d'", 0);
-                    INPUT("type='number' name='end' value='%d'", 1);
-                    INPUT("type='submit' value='Show'");
+                FORM("action='/directories' method='get'") {
+                    B("Filter by directory name");
+                    INPUT("type='text' name='name' style='margin-left: 10px;'");
+                    INPUT("type='submit' value='Filter' style='margin-right: 10px;'");
                 }
 
                 TABLE("style='width:100%'") {
@@ -127,7 +145,7 @@ CHTTPResponse* directories_page(CHTTPConnection* con, CHTTPRequest* request) {
                                 TD("style='width:30%'") { STRING("%s", dirDescription); }
                                 TD("style='width:15%'") {
                                     A("href='/directory?id=%s' style='float: right; margin-right: 5px;'", id) { STRING("edit ✏️"); }
-                                    A("href='/directory?id=%s' style='float: right; margin-right: 5px;'", id) { STRING("delete 🗑️"); }
+                                    A("href='/deldir?id=%s' style='float: right; margin-right: 5px;'", id) { STRING("delete 🗑️"); }
                                 }
                             }
                         }
@@ -139,6 +157,7 @@ CHTTPResponse* directories_page(CHTTPConnection* con, CHTTPRequest* request) {
         }
     } 
 
+    PQclear(directoryCount);
     PQclear(dirRes);
     chttp_free_get_request_parsed(get);
 

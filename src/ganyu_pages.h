@@ -20,6 +20,18 @@ CHTTPResponse* files_page(CHTTPConnection* con, CHTTPRequest* request);
 CHTTPResponse* directories_page(CHTTPConnection* con, CHTTPRequest* request);
 CHTTPResponse* sources_page(CHTTPConnection* con, CHTTPRequest* request);
 CHTTPResponse* catalog_page(CHTTPConnection* con, CHTTPRequest* request);
+CHTTPResponse* upload_page(CHTTPConnection* con, CHTTPRequest* request);
+
+CHTTPResponse* delfile_page(CHTTPConnection* con, CHTTPRequest* request);
+CHTTPResponse* deldir_page(CHTTPConnection* con, CHTTPRequest* request);
+CHTTPResponse* delsrc_page(CHTTPConnection* con, CHTTPRequest* request);
+
+CHTTPResponse* upfile_page(CHTTPConnection* con, CHTTPRequest* request);
+CHTTPResponse* updir_page(CHTTPConnection* con, CHTTPRequest* request);
+CHTTPResponse* upsrc_page(CHTTPConnection* con, CHTTPRequest* request);
+
+CHTTPResponse* rmfilestore_page(CHTTPConnection* con, CHTTPRequest* request);
+CHTTPResponse* rmdirstore_page(CHTTPConnection* con, CHTTPRequest* request);
 
 CHTTPResponse* not_found_page(CHTTPConnection* con, CHTTPRequest* request);
 
