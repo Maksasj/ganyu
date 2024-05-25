@@ -42,6 +42,13 @@ void ganyu_init_web(GanyuApp* app) {
     chttp_glob_route(app->server, "/updir?*", updir_page);
     chttp_glob_route(app->server, "/upsrc?*", upsrc_page);
 
+    chttp_glob_route(app->server, "/modfile?*", modfile_page);
+    chttp_glob_route(app->server, "/moddir?*", moddir_page);
+    chttp_glob_route(app->server, "/modsrc?*", modsrc_page);
+    
+    chttp_glob_route(app->server, "/putfile?*", putfile_page);
+    chttp_glob_route(app->server, "/putdir?*", putdir_page);
+
     chttp_glob_route(app->server, "/rmfilestore?*", rmfilestore_page);
     chttp_glob_route(app->server, "/rmdirstore?*", rmdirstore_page);
 

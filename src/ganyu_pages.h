@@ -30,8 +30,15 @@ CHTTPResponse* upfile_page(CHTTPConnection* con, CHTTPRequest* request);
 CHTTPResponse* updir_page(CHTTPConnection* con, CHTTPRequest* request);
 CHTTPResponse* upsrc_page(CHTTPConnection* con, CHTTPRequest* request);
 
+CHTTPResponse* modfile_page(CHTTPConnection* con, CHTTPRequest* request);
+CHTTPResponse* moddir_page(CHTTPConnection* con, CHTTPRequest* request);
+CHTTPResponse* modsrc_page(CHTTPConnection* con, CHTTPRequest* request);
+
 CHTTPResponse* rmfilestore_page(CHTTPConnection* con, CHTTPRequest* request);
 CHTTPResponse* rmdirstore_page(CHTTPConnection* con, CHTTPRequest* request);
+
+CHTTPResponse* putfile_page(CHTTPConnection* con, CHTTPRequest* request);
+CHTTPResponse* putdir_page(CHTTPConnection* con, CHTTPRequest* request);
 
 CHTTPResponse* not_found_page(CHTTPConnection* con, CHTTPRequest* request);
 

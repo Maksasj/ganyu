@@ -63,12 +63,36 @@ CHTTPResponse* file_page(CHTTPConnection* con, CHTTPRequest* request) {
     JOIN VirtualDirectories ON VD.ID = VirtualDirectories.ID;", (const char**) params, 1);
 
     if(dirRes == NULL) {
+        PQclear(fileRes);
         GANYU_LOG(CHTTP_ERROR, "Failed to execute SQL request");
         return not_found_page(con, request);
     }
 
     int dirMetaRows = PQntuples(dirRes);
     int dirMetaCols = PQnfields(dirRes);
+
+        // Where this directory could be stored
+    PGresult *fileToStoredRes = ganyu_make_sql_request(con, 
+    "SELECT \
+        VD.ID, \
+        VD.directoryName \
+    FROM maja8801.VirtualDirectory AS VD \
+    WHERE VD.ID NOT IN (\
+        SELECT \
+            VFD.VirtualDirectoryID \
+        FROM VirtualFileStored AS VFD \
+        WHERE VFD.VirtualFileID = $1 \
+    );", (const char**) params, 1);
+
+    if(fileToStoredRes == NULL) {
+        PQclear(fileRes);
+        PQclear(dirRes);
+        GANYU_LOG(CHTTP_ERROR, "Failed to execute SQL request");
+        return not_found_page(con, request);
+    }
+
+    int fileToStoredRows = PQntuples(fileToStoredRes);
+    int fileToStoredCols = PQnfields(fileToStoredRes);
 
     HTML_BEGIN()
 
@@ -79,16 +103,16 @@ CHTTPResponse* file_page(CHTTPConnection* con, CHTTPRequest* request) {
             TITLE("Ganyu viewer");
         }
         BODY("") {
-            DIV("style='height:15%'") {
+            DIV("style='height:25%'") {
                 H1("Ganyu viewer");
                 navigation_element(HTML_STREAM);
+
+                H2("File %s '%s%s' overview", ganyu_file_extension_to_icon(fileExtension), fileName, fileExtension);
+                HR("style='border-top: 2px solid #bbb;'");
             }
-
-            H2("File %s '%s%s' overview", ganyu_file_extension_to_icon(fileExtension), fileName, fileExtension);
-            HR("style='border-top: 2px solid #bbb;'");
-
+            
             // Search result
-            DIV("style='width:100%; display:flex;'") {
+            DIV("style='width:100%; display:flex; height:60%;'") {
                 DIV("style='width:33%; margin-right:7px; border-right: 1px solid lightgray;'") {
                     H3("File meta data");
 
@@ -136,65 +160,139 @@ CHTTPResponse* file_page(CHTTPConnection* con, CHTTPRequest* request) {
                 }
 
                 DIV("style='width:33%; margin-right:7px;'") {
-                    H3("Virtual directories");
+                    DIV("") {
+                        H3("Edit file");
+                        
+                        FORM("action='/modfile' method='get'") {
+                            INPUT("type='hidden' name='id' value='%s'", fileId);
 
-                    if(dirMetaRows <= 0) {
-                        DIV("style='width:100%;'") {
-                            STRING("This file is not contained in any Virtual Directory 👹");
+                            LABEL("") { B("File name: "); }
+                            INPUT("type='text' name='name' style='margin-right: 10px; width:100px' value='%s'", fileName);
+                            INPUT("type='submit' value='Rename file' style='margin-right: 10px; float:right;'");
                         }
-                    } else {
-                        for(int i = 0; i < dirMetaRows; ++i) {
-                            char* dirId = PQgetvalue(dirRes, i, 0);
-                            char* dirName = PQgetvalue(dirRes, i, 1);
-                            char* dirDesciption = PQgetvalue(dirRes, i, 2);
 
-                            DIV("style='width:100%;'") {
-                                A("href='/directory?id=%s' style='margin-right: 5px;'", dirId) { 
-                                    STRING("%s", dirName); 
-                                }
+                        FORM("action='/modfile' method='get'") {
+                            INPUT("type='hidden' name='id' value='%s'", fileId);
 
-                                A("href='/rmfilestore?id=%s&target=%s' style='margin-right: 5px; float: right;'", fileId, dirId) { 
-                                    STRING("remove 📌"); 
-                                }
+                            LABEL("") { B("File extension: "); }
+                            INPUT("type='text' name='ext' style='margin-right: 10px; width:100px' value='%s'", fileExtension);
+                            INPUT("type='submit' value='Change extension' style='margin-right: 10px; float:right;'");
+                        }
 
-                                if(strcmp(dirDesciption, "") != 0) {
-                                    BR();
+                        FORM("action='/modfile' method='get'") {
+                            INPUT("type='hidden' name='id' value='%s'", fileId);
 
-                                    SPAN("style='color:#888888;'") {
-                                        STRING("• %s", dirDesciption);
+                            LABEL("") { B("File size (bytes): "); }
+                            INPUT("type='number' name='size' style='margin-right: 10px; width:100px' value='%s'", fileSize);
+                            INPUT("type='submit' value='Change size' style='margin-right: 10px; float:right;'");
+                        }
+
+                        FORM("action='/modfile' method='get'") {
+                            INPUT("type='hidden' name='id' value='%s'", fileId);
+
+                            LABEL("") { B("File hash: "); }
+                            INPUT("type='text' name='hash' style='margin-right: 10px; width:100px' value='%s'", fileContentHash);
+                            INPUT("type='submit' value='Change hash' style='margin-right: 10px; float:right;'");
+                        }
+
+                        FORM("action='/modfile' method='get'") {
+                            INPUT("type='hidden' name='id' value='%s'", fileId);
+
+                            LABEL("") { B("Source access: "); }
+                            INPUT("type='text' name='access' style='margin-right: 10px; width:100px' value='%s'", sourceAccess);
+                            INPUT("type='submit' value='Change source acces' style='margin-right: 10px; float:right;'");
+                        }
+                    }
+
+                    DIV("") {
+                        H3("Virtual directories");
+
+                        DIV("style='padding-left:7px; overflow:scroll; overflow-x:hidden; width:100%; height: 50%;'") {
+                            for(int i = 0; i < fileToStoredRows; ++i) {
+                                char* dirId = PQgetvalue(fileToStoredRes, i, 0);
+                                char* dirName = PQgetvalue(fileToStoredRes, i, 1);
+
+                                DIV("style='width:100%;'") {
+                                    A("href='/directory?id=%s' style='margin-right: 5px;'", dirId) { 
+                                        STRING("%s", dirName); 
                                     }
+
+                                    A("href='/putfile?id=%s&dir=%s' style='margin-right: 5px; float: right;'", fileId, dirId) { 
+                                        STRING("pin ❇️"); 
+                                    }
+
+                                    HR("style='border-top: 1px solid #bbb;'");
                                 }
                             }
                         }
                     }
+                    
                 }
 
                 DIV("style='width:33%; padding-left:7px; border-left: 1px solid lightgray;'") {
-                    H3("Source %s %s", ganyu_source_type_to_icon(sourceType), sourceName);
+                    DIV("") {
+                        H3("Virtual directories");
 
-                    TABLE("") {
-                        TR("") {
-                            TD("") { B("Source name"); }
-                            TD("") { STRING("%s", sourceName); }
-                        }
+                        if(dirMetaRows <= 0) {
+                            DIV("style='width:100%;'") {
+                                STRING("This file is not contained in any Virtual Directory 👹");
+                            }
+                        } else {
+                            for(int i = 0; i < dirMetaRows; ++i) {
+                                char* dirId = PQgetvalue(dirRes, i, 0);
+                                char* dirName = PQgetvalue(dirRes, i, 1);
+                                char* dirDesciption = PQgetvalue(dirRes, i, 2);
 
-                        TR("") {
-                            TD("") { B("Source Description"); }
-                            TD("") { STRING("%s", sourceDesciption); }
-                        }
-                        
-                        TR("") {
-                            TD("") { B("Source Type"); }
-                            TD("") { STRING("%s", sourceType); }
-                        }
+                                DIV("style='width:100%;'") {
+                                    A("href='/directory?id=%s' style='margin-right: 5px;'", dirId) { 
+                                        STRING("%s", dirName); 
+                                    }
 
-                        TR("") {
-                            TD("") { B("Source Root Destination"); }
-                            TD("") { STRING("%s", sourceRootDestination); }
+                                    A("href='/rmfilestore?id=%s&target=%s' style='margin-right: 5px; float: right;'", fileId, dirId) { 
+                                        STRING("remove 📌"); 
+                                    }
+
+                                    if(strcmp(dirDesciption, "") != 0) {
+                                        BR();
+
+                                        SPAN("style='color:#888888;'") {
+                                            STRING("• %s", dirDesciption);
+                                        }
+                                    }
+
+                                    HR("style='border-top: 1px solid #bbb;'");
+                                }
+                            }
                         }
                     }
 
-                    A("href='/source?id=%s' style='float: left; margin-right: 5px;'", sourceId) { STRING("view 👀"); }
+                    DIV("") {
+                        H3("Source %s %s", ganyu_source_type_to_icon(sourceType), sourceName);
+
+                        TABLE("") {
+                            TR("") {
+                                TD("") { B("Source name"); }
+                                TD("") { STRING("%s", sourceName); }
+                            }
+
+                            TR("") {
+                                TD("") { B("Source Description"); }
+                                TD("") { STRING("%s", sourceDesciption); }
+                            }
+                            
+                            TR("") {
+                                TD("") { B("Source Type"); }
+                                TD("") { STRING("%s", sourceType); }
+                            }
+
+                            TR("") {
+                                TD("") { B("Source Root Destination"); }
+                                TD("") { STRING("%s", sourceRootDestination); }
+                            }
+                        }
+
+                        A("href='/source?id=%s' style='float: left; margin-right: 5px;'", sourceId) { STRING("view 👀"); } 
+                    }
                 }
             }
         }
@@ -202,6 +300,7 @@ CHTTPResponse* file_page(CHTTPConnection* con, CHTTPRequest* request) {
 
     PQclear(fileRes);
     PQclear(dirRes);
+    PQclear(fileToStoredRes);
 
     chttp_free_get_request_parsed(get);
 

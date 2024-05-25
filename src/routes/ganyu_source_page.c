@@ -17,9 +17,7 @@ CHTTPResponse* source_page(CHTTPConnection* con, CHTTPRequest* request) {
         return not_found_page(con, request);
     }
 
-    char* params[1] = {
-        idField->fieldValue
-    };
+    char* params[1] = { idField->fieldValue };
 
     GANYU_LOG(CHTTP_INFO, "Making SQL request to database");
 
@@ -96,6 +94,31 @@ CHTTPResponse* source_page(CHTTPConnection* con, CHTTPRequest* request) {
                             TD("") { B("Source root destination"); }
                             TD("") { STRING("%s", sourceRoodDestination); }
                         }
+                    }
+                }
+
+                DIV("style='width:33%; margin-right:7px;'") {
+                    H3("Edit source");
+                    
+                    FORM("action='/modsrc' method='get'") {
+                        INPUT("type='hidden' name='id' value='%s'", sourceId);
+
+                        LABEL("") { B("Source name: "); }
+                        BR();
+                        INPUT("type='text' name='name' style='margin-right: 10px;' value='%s'", sourceName);
+                        INPUT("type='submit' value='Rename source' style='margin-right: 10px;'");
+                    }
+
+                    FORM("action='/modsrc' method='get'") {
+                        INPUT("type='hidden' name='id' value='%s'", sourceId);
+
+                        LABEL("") { B("Source description: "); }
+                        BR();
+                        TEXTAREA("name='desc' rows='10' cols='30'") {
+                            STRING("%s", sourceDescription);
+                        }
+                        BR();
+                        INPUT("type='submit' value='Change description' style='margin-right: 10px;'");
                     }
                 }
             }
