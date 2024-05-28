@@ -1,0 +1,3 @@
+DROP INDEX maja8801.VirtualFileSizeIndex;
+DROP INDEX maja8801.VirtualFileContentHashIndex;
+DROP INDEX maja8801.VirtualFileContentAcrossSourcesIndex;

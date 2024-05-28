@@ -1,0 +1,116 @@
+-- SELECT VF.ID, VF.FileName, VF.FileExtension, VF.FileSize, S.ID, S.sourceName
+-- FROM maja8801.VirtualFile AS VF
+-- JOIN maja8801.Source AS S ON VF.SourceID = S.ID
+-- WHERE (VF.ID > 0) AND (VF.ID < 100);
+-- 
+-- 
+-- SELECT * 
+-- FROM maja8801.VirtualFile as VF
+-- JOIN maja8801.Source AS S ON VF.SourceID = S.ID
+-- WHERE VF.ID = 100;
+-- 
+-- WITH VirtualDirectories(ID) AS 
+--     (SELECT VFS.VirtualDirectoryID
+--     FROM maja8801.VirtualFileStored as VFS
+--     WHERE VFS.VirtualFileID = 100)
+-- SELECT VD.ID, VD.directoryName, VD.directoryDescription
+-- FROM maja8801.VirtualDirectory AS VD
+-- JOIN VirtualDirectories ON VD.ID = VirtualDirectories.ID;
+-- 
+-- WITH 
+-- STEP0(ID, directoryName, directoryDescription) AS (
+--     SELECT 
+--         VD.ID, 
+--         VD.directoryName, 
+--         VD.directoryDescription
+--     FROM maja8801.VirtualDirectory AS VD
+--     WHERE (VD.ID > 0) AND (VD.ID < 100)
+-- ),
+-- STEP1(ID, directoryName, directoryDescription, storedDirs) AS (
+--     SELECT 
+--         VD.ID, 
+--         VD.directoryName, 
+--         VD.directoryDescription, 
+--         COUNT(VDS.TargetVirtualDirectoryID) AS "stores directries"
+--     FROM STEP0 AS VD
+--     LEFT JOIN VirtualDirectoryStored AS VDS 
+--         ON VD.ID = VDS.TargetVirtualDirectoryID
+--     GROUP BY 
+--         VD.ID, 
+--         VD.directoryName, 
+--         VD.directoryDescription
+-- )
+-- SELECT 
+--     VD.ID, 
+--     VD.directoryName, 
+--     VD.directoryDescription, 
+--     VD.storedDirs, 
+--     COUNT(VFS.VirtualDirectoryID)  AS "stores files"
+-- FROM STEP1 AS VD
+-- LEFT JOIN VirtualFileStored AS VFS 
+--     ON VD.ID = VFS.VirtualDirectoryID
+-- GROUP BY 
+--     VD.ID, 
+--     VD.directoryName, 
+--     VD.directoryDescription,
+--     VD.storedDirs
+-- ORDER BY VD.ID;
+-- 
+-- SELECT Files.ID, VF.FileName, VF.FileExtension
+-- FROM maja8801.PhysicalVirtualFile AS Files
+-- JOIN maja8801.VirtualFile AS VF ON Files.ID = VF.ID
+-- WHERE (Files.ID > 0) AND (Files.ID < 10000);
+-- 
+-- 
+-- SELECT VF.ID, VF.FileName, VF.FileExtension, VF.FileSize, S.ID, S.sourceName
+-- FROM maja8801.VirtualFile AS VF
+-- JOIN maja8801.Source AS S ON VF.SourceID = S.ID
+-- WHERE (VF.ID > 0) AND (VF.ID < 10000) AND (VF.FileName LIKE '%');
+-- 
+-- SELECT *
+-- FROM maja8801.VirtualFileStored;
+-- 
+-- -- FROM maja8801.VirtualFile as VF
+-- -- JOIN maja8801.VirtualDirectory AS VD ON VD
+
+-- SELECT COUNT(*) FROM maja8801.VirtualFile;
+-- SELECT COUNT(*) FROM maja8801.VirtualDirectory;
+-- SELECT COUNT(*) FROM maja8801.Source;
+-- 
+-- SELECT VD.ID, VD.directoryName
+-- FROM maja8801.VirtualDirectoryStored AS VDS
+-- JOIN maja8801.VirtualDirectory AS VD ON VD.ID = VDS.VirtualDirectoryID
+-- WHERE VDS.TargetVirtualDirectoryID = 1;
+-- 
+-- SELECT VF.ID, VF.FileName
+-- FROM maja8801.VirtualFileStored AS VFS
+-- JOIN maja8801.VirtualFile AS VF ON VF.ID = VFS.VirtualFileID
+-- WHERE VFS.VirtualDirectoryID = 4;
+
+-- DELETE FROM maja8801.VirtualFile AS VF 
+-- WHERE VF.ID = 50;
+-- 
+
+-- SELECT * FROM maja8801.VirtualDirectory; 
+-- 
+-- DELETE FROM maja8801.VirtualDirectory AS VD 
+-- WHERE VD.ID = 1;
+-- 
+-- SELECT * FROM maja8801.VirtualDirectory; 
+-- 7272c1ab0fe16cac668b4594f1cdcd9c
+-- ffffffffffffffffffffffffffffffff
+-- INSERT INTO maja8801.VirtualFile(FileName, FileExtension, FileSize, ContentHash, SourceID, SourceAccess)
+-- VALUES
+--     ('.gitignore', NULL, 12, 'ffffffffffffffffffffffffffffffff', 1, 'Programming\fakjsg');
+--     
+
+-- SELECT 
+--     VD.ID, 
+--     VD.directoryName
+-- FROM maja8801.VirtualDirectory AS VD
+-- WHERE VD.ID NOT IN (
+--     SELECT 
+--         VFD.VirtualDirectoryID 
+--     FROM VirtualFileStored AS VFD 
+--     WHERE VFD.VirtualFileID = 2440
+-- );
