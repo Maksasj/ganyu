@@ -21,6 +21,17 @@ CHTTPResponse* modsrc_page(CHTTPConnection* con, CHTTPRequest* request) {
 
     int res = 0;
 
+    {
+        PGresult* lres = PQexec(conn, "BEGIN");
+
+        if(PQresultStatus(lres) != PGRES_COMMAND_OK) {
+            GANYU_LOG(CHTTP_ERROR, "BEGIN command failed: %s", PQerrorMessage(conn));
+            res = 1;
+        }
+
+        PQclear(lres);
+    }
+
     if(nameField != NULL) {
         char* params[2] = { idField->fieldValue, nameField->fieldValue };
 
@@ -77,6 +88,17 @@ CHTTPResponse* modsrc_page(CHTTPConnection* con, CHTTPRequest* request) {
         }
     } 
    
+    {
+        PGresult* lres = PQexec(conn, "END");
+
+        if(PQresultStatus(lres) != PGRES_COMMAND_OK) {
+            GANYU_LOG(CHTTP_ERROR, "END command failed: %s", PQerrorMessage(conn));
+            res = 1;
+        }
+
+        PQclear(lres);
+    }
+
     chttp_free_get_request_parsed(get);
 
     GANYU_LOG(CHTTP_INFO, "Started HTML compilation");

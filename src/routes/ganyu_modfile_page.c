@@ -2,6 +2,9 @@
 #include "ganyu_pages.h"
 
 CHTTPResponse* modfile_page(CHTTPConnection* con, CHTTPRequest* request) {
+    GanyuApp* app = (GanyuApp*) con->server->userPtr;
+    PGconn* conn = app->pgConnection;
+
     CHTTPGetRequestParsed* get = chttp_parse_get_request(request);
 
     if(get == NULL) {
@@ -23,6 +26,17 @@ CHTTPResponse* modfile_page(CHTTPConnection* con, CHTTPRequest* request) {
     CHTTPGetField* accessField = chttp_get_request_parsed_find_field(get, "access");
 
     int res = 0;
+
+    {
+        PGresult* lres = PQexec(conn, "BEGIN");
+
+        if(PQresultStatus(lres) != PGRES_COMMAND_OK) {
+            GANYU_LOG(CHTTP_ERROR, "BEGIN command failed: %s", PQerrorMessage(conn));
+            res = 1;
+        }
+
+        PQclear(lres);
+    }
 
     if(nameField != NULL) {
         char* params[2] = { idField->fieldValue, nameField->fieldValue };
@@ -121,6 +135,17 @@ CHTTPResponse* modfile_page(CHTTPConnection* con, CHTTPRequest* request) {
             }
         }
     } 
+
+    {
+        PGresult* lres = PQexec(conn, "END");
+
+        if(PQresultStatus(lres) != PGRES_COMMAND_OK) {
+            GANYU_LOG(CHTTP_ERROR, "END command failed: %s", PQerrorMessage(conn));
+            res = 1;
+        }
+
+        PQclear(lres);
+    }
    
     chttp_free_get_request_parsed(get);
 
