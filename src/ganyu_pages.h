@@ -46,6 +46,8 @@ void navigation_element(FILE* HTML_STREAM);
 
 char* ganyu_file_extension_to_icon(char* ext);
 char* ganyu_source_type_to_icon(char* ext);
+
 PGresult* ganyu_make_sql_request(CHTTPConnection* con, const char* query, const char** params, unsigned int count);
+int ganyu_make_sql_request_line(CHTTPConnection* con, const char* command);
 
 #endif

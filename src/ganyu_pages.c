@@ -83,3 +83,19 @@ PGresult* ganyu_make_sql_request(CHTTPConnection* con, const char* query, const 
 
     return res;
 }
+
+int ganyu_make_sql_request_line(CHTTPConnection* con, const char* command) {
+    GanyuApp* app = (GanyuApp*) con->server->userPtr;
+    PGconn* conn = app->pgConnection;
+
+    PGresult* lres = PQexec(conn, command);
+
+    if(PQresultStatus(lres) != PGRES_COMMAND_OK) {
+        GANYU_LOG(CHTTP_ERROR, "%s command failed: %s", command, PQerrorMessage(conn));
+        return 1;
+    }
+
+    PQclear(lres);
+    
+    return 0;
+}

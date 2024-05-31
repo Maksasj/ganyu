@@ -2,6 +2,9 @@
 #include "ganyu_pages.h"
 
 CHTTPResponse* moddir_page(CHTTPConnection* con, CHTTPRequest* request) {
+    GanyuApp* app = (GanyuApp*) con->server->userPtr;
+    PGconn* conn = app->pgConnection;
+
     CHTTPGetRequestParsed* get = chttp_parse_get_request(request);
 
     if(get == NULL) {
@@ -21,18 +24,12 @@ CHTTPResponse* moddir_page(CHTTPConnection* con, CHTTPRequest* request) {
 
     int res = 0;
 
-    {
-        PGresult* lres = PQexec(conn, "BEGIN");
-
-        if(PQresultStatus(lres) != PGRES_COMMAND_OK) {
-            GANYU_LOG(CHTTP_ERROR, "BEGIN command failed: %s", PQerrorMessage(conn));
-            res = 1;
-        }
-
-        PQclear(lres);
+    if(ganyu_make_sql_request_line(con, "BEGIN")) {
+        chttp_free_get_request_parsed(get);
+        return not_found_page(con, request);
     }
 
-    if(nameField != NULL) {
+    if(nameField != NULL && res == 0) {
         char* params[2] = { idField->fieldValue, nameField->fieldValue };
 
         PGresult *pgres = ganyu_make_sql_request(con, 
@@ -40,13 +37,15 @@ CHTTPResponse* moddir_page(CHTTPConnection* con, CHTTPRequest* request) {
             SET directoryName = $2 \
         WHERE ID = $1;", (const char**) params, 2);
 
-        if(pgres != NULL) {
-            res = 1;
+        if(pgres != NULL)
             PQclear(pgres);
+        else {
+            ganyu_make_sql_request_line(con, "ROLLBACK");
+            res = 1;
         }
     }
 
-    if(descField != NULL) {
+    if(descField != NULL && res == 0) {
         char* params[2] = { idField->fieldValue, descField->fieldValue };
 
         PGresult *pgres = ganyu_make_sql_request(con, 
@@ -54,9 +53,11 @@ CHTTPResponse* moddir_page(CHTTPConnection* con, CHTTPRequest* request) {
             SET directoryDescription = $2 \
         WHERE ID = $1;", (const char**) params, 2);
 
-        if(pgres != NULL) {
-            res = 1;
+        if(pgres != NULL)
             PQclear(pgres);
+        else {
+            ganyu_make_sql_request_line(con, "ROLLBACK");
+            res = 1;
         }
     }
     
@@ -70,7 +71,7 @@ CHTTPResponse* moddir_page(CHTTPConnection* con, CHTTPRequest* request) {
         }
         BODY("") {
             DIV("style='width:100%; height:100%; display:grid; place-items: center'") {
-                if(res) {
+                if(!res) {
                     DIV("style='text-align: center;'") {
                         H1("🎉 Successfully modified directory 🎉");
                         A("href='/directory?id=%s' style='margin-right: 7px;'", idField->fieldValue) { B("Ok 🌚"); }
@@ -88,16 +89,8 @@ CHTTPResponse* moddir_page(CHTTPConnection* con, CHTTPRequest* request) {
         }
     } 
    
-    {
-        PGresult* lres = PQexec(conn, "END");
-
-        if(PQresultStatus(lres) != PGRES_COMMAND_OK) {
-            GANYU_LOG(CHTTP_ERROR, "END command failed: %s", PQerrorMessage(conn));
-            res = 1;
-        }
-
-        PQclear(lres);
-    }
+    if(!res)
+        ganyu_make_sql_request_line(con, "END");
 
     chttp_free_get_request_parsed(get);
 
