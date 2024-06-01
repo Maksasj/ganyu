@@ -22,8 +22,8 @@ CHTTPResponse* file_page(CHTTPConnection* con, CHTTPRequest* request) {
 
     PGresult *fileRes = ganyu_make_sql_request(con, 
     "SELECT * \
-    FROM maja8801.VirtualFile as VF \
-    JOIN maja8801.Source AS S ON VF.SourceID = S.ID \
+    FROM ganyu.VirtualFile as VF \
+    JOIN ganyu.Source AS S ON VF.SourceID = S.ID \
     WHERE VF.ID = $1;", (const char**) params, 1);
 
     if(fileRes == NULL) {
@@ -56,10 +56,10 @@ CHTTPResponse* file_page(CHTTPConnection* con, CHTTPRequest* request) {
     PGresult *dirRes = ganyu_make_sql_request(con, 
     "WITH VirtualDirectories(ID) AS \
         (SELECT VFS.VirtualDirectoryID \
-        FROM maja8801.VirtualFileStored as VFS \
+        FROM ganyu.VirtualFileStored as VFS \
         WHERE VFS.VirtualFileID = $1) \
     SELECT VD.ID, VD.directoryName, VD.directoryDescription \
-    FROM maja8801.VirtualDirectory AS VD \
+    FROM ganyu.VirtualDirectory AS VD \
     JOIN VirtualDirectories ON VD.ID = VirtualDirectories.ID;", (const char**) params, 1);
 
     if(dirRes == NULL) {
@@ -76,7 +76,7 @@ CHTTPResponse* file_page(CHTTPConnection* con, CHTTPRequest* request) {
     "SELECT \
         VD.ID, \
         VD.directoryName \
-    FROM maja8801.VirtualDirectory AS VD \
+    FROM ganyu.VirtualDirectory AS VD \
     WHERE VD.ID NOT IN (\
         SELECT \
             VFD.VirtualDirectoryID \

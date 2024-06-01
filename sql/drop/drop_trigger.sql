@@ -1,5 +1,0 @@
-DROP TRIGGER VirtualFileUpdateTrigger ON maja8801.VirtualFile;
-DROP TRIGGER CheckVirtualFileStoredTrigger ON maja8801.VirtualDirectoryStored;
-
-DROP FUNCTION maja8801.UpdateDateModifiedFunction;
-DROP FUNCTION maja8801.CheckVirtualFileStoredFunction;

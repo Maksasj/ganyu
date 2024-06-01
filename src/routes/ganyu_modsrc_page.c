@@ -33,7 +33,7 @@ CHTTPResponse* modsrc_page(CHTTPConnection* con, CHTTPRequest* request) {
         char* params[2] = { idField->fieldValue, nameField->fieldValue };
 
         PGresult *pgres = ganyu_make_sql_request(con, 
-        "UPDATE maja8801.Source \
+        "UPDATE ganyu.Source \
             SET sourceName = $2 \
         WHERE ID = $1;", (const char**) params, 2);
 
@@ -49,7 +49,7 @@ CHTTPResponse* modsrc_page(CHTTPConnection* con, CHTTPRequest* request) {
         char* params[2] = { idField->fieldValue, descField->fieldValue };
 
         PGresult *pgres = ganyu_make_sql_request(con, 
-        "UPDATE maja8801.Source \
+        "UPDATE ganyu.Source \
             SET sourceDescription = $2 \
         WHERE ID = $1;", (const char**) params, 2);
 

@@ -56,7 +56,7 @@ CHTTPResponse* upfile_page(CHTTPConnection* con, CHTTPRequest* request) {
     };
     
     PGresult *res = ganyu_make_sql_request(con, 
-    "INSERT INTO maja8801.VirtualFile(FileName, FileExtension, FileSize, ContentHash, SourceID, SourceAccess) \
+    "INSERT INTO ganyu.VirtualFile(FileName, FileExtension, FileSize, ContentHash, SourceID, SourceAccess) \
     VALUES \
         ($1, $2, $3, $4, $5, $6);", (const char**) params, 6);
 

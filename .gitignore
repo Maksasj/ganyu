@@ -1,4 +1,3 @@
 build
-*.ganyu.txt
-start.sh
 .vscode
+ganyu

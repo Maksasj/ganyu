@@ -23,7 +23,7 @@ CHTTPResponse* source_page(CHTTPConnection* con, CHTTPRequest* request) {
 
     PGresult *sourceRes = ganyu_make_sql_request(con, 
     "SELECT * \
-    FROM maja8801.Source AS S \
+    FROM ganyu.Source AS S \
     WHERE S.ID = $1;", (const char**) params, 1);
 
     if(sourceRes == NULL) {

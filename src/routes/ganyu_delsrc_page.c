@@ -19,7 +19,7 @@ CHTTPResponse* delsrc_page(CHTTPConnection* con, CHTTPRequest* request) {
     char* params[1] = { idField->fieldValue };
 
     PGresult *res = ganyu_make_sql_request(con, 
-    "DELETE FROM maja8801.Source AS S \
+    "DELETE FROM ganyu.Source AS S \
     WHERE S.ID = $1;", (const char**) params, 1);
 
     HTML_BEGIN()

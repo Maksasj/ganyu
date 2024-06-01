@@ -87,8 +87,8 @@ CHTTPResponse* catalog_page(CHTTPConnection* con, CHTTPRequest* request) {
 
                     PGresult *filesRes = ganyu_make_sql_request(con, 
                         "SELECT Files.ID, VF.FileName, VF.FileExtension \
-                        FROM maja8801.PhysicalVirtualFile AS Files \
-                        JOIN maja8801.VirtualFile AS VF ON Files.ID = VF.ID \
+                        FROM ganyu.PhysicalVirtualFile AS Files \
+                        JOIN ganyu.VirtualFile AS VF ON Files.ID = VF.ID \
                         WHERE (Files.ID > $1) AND (Files.ID < $2) AND (VF.FileName LIKE $3);", (const char**) params, 3);
                     
                     if(filesRes == NULL) {
@@ -130,8 +130,8 @@ CHTTPResponse* catalog_page(CHTTPConnection* con, CHTTPRequest* request) {
 
                     PGresult *filesRes = ganyu_make_sql_request(con, 
                         "SELECT Files.ID, VF.FileName, VF.FileExtension \
-                        FROM maja8801.RemoteVirtualFile AS Files \
-                        JOIN maja8801.VirtualFile AS VF ON Files.ID = VF.ID \
+                        FROM ganyu.RemoteVirtualFile AS Files \
+                        JOIN ganyu.VirtualFile AS VF ON Files.ID = VF.ID \
                         WHERE (Files.ID > $1) AND (Files.ID < $2) AND (VF.FileName LIKE $3);", (const char**) params, 3);
                     
                     if(filesRes == NULL) {
@@ -173,8 +173,8 @@ CHTTPResponse* catalog_page(CHTTPConnection* con, CHTTPRequest* request) {
 
                     PGresult *filesRes = ganyu_make_sql_request(con, 
                         "SELECT Files.ID, VF.FileName, VF.FileExtension \
-                        FROM maja8801.WebVirtualFile AS Files \
-                        JOIN maja8801.VirtualFile AS VF ON Files.ID = VF.ID \
+                        FROM ganyu.WebVirtualFile AS Files \
+                        JOIN ganyu.VirtualFile AS VF ON Files.ID = VF.ID \
                         WHERE (Files.ID > $1) AND (Files.ID < $2) AND (VF.FileName LIKE $3);", (const char**) params, 3);
                     
                     if(filesRes == NULL) {

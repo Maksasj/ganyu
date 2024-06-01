@@ -36,7 +36,7 @@ CHTTPResponse* modfile_page(CHTTPConnection* con, CHTTPRequest* request) {
         char* params[2] = { idField->fieldValue, nameField->fieldValue };
 
         PGresult *pgres = ganyu_make_sql_request(con, 
-        "UPDATE maja8801.VirtualFile \
+        "UPDATE ganyu.VirtualFile \
             SET FileName = $2 \
         WHERE ID = $1;", (const char**) params, 2);
 
@@ -52,7 +52,7 @@ CHTTPResponse* modfile_page(CHTTPConnection* con, CHTTPRequest* request) {
         char* params[2] = { idField->fieldValue, extField->fieldValue };
 
         PGresult *pgres = ganyu_make_sql_request(con, 
-        "UPDATE maja8801.VirtualFile \
+        "UPDATE ganyu.VirtualFile \
             SET FileExtension = $2 \
         WHERE ID = $1;", (const char**) params, 2);
 
@@ -68,7 +68,7 @@ CHTTPResponse* modfile_page(CHTTPConnection* con, CHTTPRequest* request) {
         char* params[2] = { idField->fieldValue, sizeField->fieldValue };
 
         PGresult *pgres = ganyu_make_sql_request(con, 
-        "UPDATE maja8801.VirtualFile \
+        "UPDATE ganyu.VirtualFile \
             SET FileSize = $2 \
         WHERE ID = $1;", (const char**) params, 2);
 
@@ -84,7 +84,7 @@ CHTTPResponse* modfile_page(CHTTPConnection* con, CHTTPRequest* request) {
         char* params[2] = { idField->fieldValue, hashField->fieldValue };
 
         PGresult *pgres = ganyu_make_sql_request(con, 
-        "UPDATE maja8801.VirtualFile \
+        "UPDATE ganyu.VirtualFile \
             SET ContentHash = $2 \
         WHERE ID = $1;", (const char**) params, 2);
 
@@ -100,7 +100,7 @@ CHTTPResponse* modfile_page(CHTTPConnection* con, CHTTPRequest* request) {
         char* params[2] = { idField->fieldValue, accessField->fieldValue };
 
         PGresult *pgres = ganyu_make_sql_request(con, 
-        "UPDATE maja8801.VirtualFile \
+        "UPDATE ganyu.VirtualFile \
             SET SourceAccess = $2 \
         WHERE ID = $1;", (const char**) params, 2);
 

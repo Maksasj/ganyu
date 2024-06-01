@@ -1,4 +1,4 @@
-CREATE TABLE maja8801.Source(
+CREATE TABLE ganyu.Source(
     ID                      INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     sourceName              TEXT DEFAULT 'New Source',   
     sourceDescription       TEXT,
@@ -9,7 +9,7 @@ CREATE TABLE maja8801.Source(
         CHECK (sourceType = 'WEB' OR sourceType = 'PHYSICAL' OR sourceType = 'REMOTE')
 );
 
-CREATE TABLE maja8801.VirtualFile(
+CREATE TABLE ganyu.VirtualFile(
     ID              INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     FileName        TEXT DEFAULT 'New Virtual File',   
     FileExtension   TEXT DEFAULT NULL,  
@@ -33,14 +33,14 @@ CREATE TABLE maja8801.VirtualFile(
     )
 );
 
-CREATE TABLE maja8801.VirtualDirectory(
+CREATE TABLE ganyu.VirtualDirectory(
     ID                      INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     directoryName           TEXT DEFAULT 'New Directory',   
     directoryDescription    TEXT
 );
 
 -- Create relation tables
-CREATE TABLE maja8801.VirtualFileStored(
+CREATE TABLE ganyu.VirtualFileStored(
     VirtualFileID       INT NOT NULL,
     VirtualDirectoryID  INT NOT NULL,
     PRIMARY KEY (VirtualFileID, VirtualDirectoryID),
@@ -56,7 +56,7 @@ CREATE TABLE maja8801.VirtualFileStored(
         ON DELETE CASCADE
 );
 
-CREATE TABLE maja8801.VirtualDirectoryStored(
+CREATE TABLE ganyu.VirtualDirectoryStored(
     VirtualDirectoryID          INT NOT NULL,
     TargetVirtualDirectoryID    INT NOT NULL,
     PRIMARY KEY (VirtualDirectoryID, TargetVirtualDirectoryID),

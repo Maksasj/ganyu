@@ -2,7 +2,7 @@
 #include "ganyu_pages.h"
 
 CHTTPResponse* upload_page(CHTTPConnection* con, CHTTPRequest* request) {
-    PGresult *sourceRes = ganyu_make_sql_request(con, "SELECT * FROM maja8801.Source;", NULL, 0);
+    PGresult *sourceRes = ganyu_make_sql_request(con, "SELECT * FROM ganyu.Source;", NULL, 0);
 
     if(sourceRes == NULL) {
         GANYU_LOG(CHTTP_ERROR, "Failed to execute sql request");

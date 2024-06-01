@@ -28,7 +28,7 @@ CHTTPResponse* updir_page(CHTTPConnection* con, CHTTPRequest* request) {
     };
     
     PGresult *res = ganyu_make_sql_request(con, 
-    "INSERT INTO maja8801.VirtualDirectory(directoryName, directoryDescription) \
+    "INSERT INTO ganyu.VirtualDirectory(directoryName, directoryDescription) \
     VALUES \
         ($1, $2);", (const char**) params, 2);
 

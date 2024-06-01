@@ -42,7 +42,7 @@ CHTTPResponse* upsrc_page(CHTTPConnection* con, CHTTPRequest* request) {
     };
     
     PGresult *res = ganyu_make_sql_request(con, 
-    "INSERT INTO maja8801.Source(sourceName, sourceDescription, sourceType, sourceRootDestination) \
+    "INSERT INTO ganyu.Source(sourceName, sourceDescription, sourceType, sourceRootDestination) \
     VALUES \
         ($1, $2, $3, $4);", (const char**) params, 4);
 

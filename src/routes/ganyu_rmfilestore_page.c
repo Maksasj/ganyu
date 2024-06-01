@@ -24,7 +24,7 @@ CHTTPResponse* rmfilestore_page(CHTTPConnection* con, CHTTPRequest* request) {
     char* params[2] = { idField->fieldValue, targetField->fieldValue };
 
     PGresult *res = ganyu_make_sql_request(con, 
-    "DELETE FROM maja8801.VirtualFileStored AS VFS \
+    "DELETE FROM ganyu.VirtualFileStored AS VFS \
     WHERE (VFS.VirtualFileID = $1) AND (VFS.VirtualDirectoryID = $2);", (const char**) params, 2);
 
     HTML_BEGIN()

@@ -33,7 +33,7 @@ CHTTPResponse* moddir_page(CHTTPConnection* con, CHTTPRequest* request) {
         char* params[2] = { idField->fieldValue, nameField->fieldValue };
 
         PGresult *pgres = ganyu_make_sql_request(con, 
-        "UPDATE maja8801.VirtualDirectory \
+        "UPDATE ganyu.VirtualDirectory \
             SET directoryName = $2 \
         WHERE ID = $1;", (const char**) params, 2);
 
@@ -49,7 +49,7 @@ CHTTPResponse* moddir_page(CHTTPConnection* con, CHTTPRequest* request) {
         char* params[2] = { idField->fieldValue, descField->fieldValue };
 
         PGresult *pgres = ganyu_make_sql_request(con, 
-        "UPDATE maja8801.VirtualDirectory \
+        "UPDATE ganyu.VirtualDirectory \
             SET directoryDescription = $2 \
         WHERE ID = $1;", (const char**) params, 2);
 

@@ -31,7 +31,7 @@ CHTTPResponse* directories_page(CHTTPConnection* con, CHTTPRequest* request) {
                 VD.ID,  \
                 VD.directoryName,  \
                 VD.directoryDescription \
-            FROM maja8801.VirtualDirectory AS VD \
+            FROM ganyu.VirtualDirectory AS VD \
             WHERE (VD.ID > $1) AND (VD.ID < $2) AND(VD.directoryName LIKE $3) \
         ), \
         STEP1(ID, directoryName, directoryDescription, storedDirs) AS ( \
@@ -70,7 +70,7 @@ CHTTPResponse* directories_page(CHTTPConnection* con, CHTTPRequest* request) {
     }
 
     char* count = "0";
-    PGresult *directoryCount = ganyu_make_sql_request(con, "SELECT COUNT(*) FROM maja8801.VirtualDirectory;", NULL, 0);
+    PGresult *directoryCount = ganyu_make_sql_request(con, "SELECT COUNT(*) FROM ganyu.VirtualDirectory;", NULL, 0);
     if(directoryCount != NULL) {
         count = PQgetvalue(directoryCount, 0, 0);
     }

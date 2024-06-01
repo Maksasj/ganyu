@@ -1,0 +1,39 @@
+version: '2'
+
+# Start all machines
+services:
+  backend:
+    privileged: true
+    restart: always
+    container_name: backend
+    build: backend
+    cap_add:
+        - NET_ADMIN
+        - NET_BROADCAST
+        - NET_RAW
+    ports:
+        - 3000:80
+
+  database:
+    privileged: true
+    restart: always
+    container_name: database
+    build: database
+    cap_add:
+        - NET_ADMIN
+        - NET_BROADCAST
+        - NET_RAW
+    ports:
+        - 5432:5432
+    networks:
+      default:
+        ipv4_address: 172.22.2.10
+
+    environment:
+      POSTGRES_USER: ganyu
+      POSTGRES_PASSWORD: ganyu
+
+networks:
+  default:
+    external: true
+    name: ganyu_network

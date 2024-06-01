@@ -27,7 +27,7 @@ CHTTPResponse* sources_page(CHTTPConnection* con, CHTTPRequest* request) {
 
     PGresult *sourceRes = ganyu_make_sql_request(con, 
         "SELECT * \
-        FROM maja8801.Source AS S \
+        FROM ganyu.Source AS S \
         WHERE (S.ID > $1) AND (S.ID < $2) AND (S.sourceName LIKE $3);", (const char**) params, 3);
     
     if(sourceRes == NULL) {
@@ -36,7 +36,7 @@ CHTTPResponse* sources_page(CHTTPConnection* con, CHTTPRequest* request) {
     }
 
     char* count = "0";
-    PGresult *sourceCount = ganyu_make_sql_request(con, "SELECT COUNT(*) FROM maja8801.Source;", NULL, 0);
+    PGresult *sourceCount = ganyu_make_sql_request(con, "SELECT COUNT(*) FROM ganyu.Source;", NULL, 0);
     if(sourceCount != NULL) {
         count = PQgetvalue(sourceCount, 0, 0);
     }

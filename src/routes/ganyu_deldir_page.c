@@ -19,7 +19,7 @@ CHTTPResponse* deldir_page(CHTTPConnection* con, CHTTPRequest* request) {
     char* params[1] = { idField->fieldValue };
 
     PGresult *res = ganyu_make_sql_request(con, 
-    "DELETE FROM maja8801.VirtualDirectory AS VD \
+    "DELETE FROM ganyu.VirtualDirectory AS VD \
     WHERE VD.ID = $1;", (const char**) params, 1);
 
     HTML_BEGIN()

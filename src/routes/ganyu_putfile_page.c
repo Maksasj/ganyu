@@ -26,7 +26,7 @@ CHTTPResponse* putfile_page(CHTTPConnection* con, CHTTPRequest* request) {
     char* params[2] = { idField->fieldValue, dirField->fieldValue };
 
     PGresult *res = ganyu_make_sql_request(con, 
-    "INSERT INTO maja8801.VirtualFileStored(VirtualFileID, VirtualDirectoryID) \
+    "INSERT INTO ganyu.VirtualFileStored(VirtualFileID, VirtualDirectoryID) \
     VALUES \
     ($1, $2);", (const char**) params, 2);
 

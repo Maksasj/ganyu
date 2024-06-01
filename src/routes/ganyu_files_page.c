@@ -27,8 +27,8 @@ CHTTPResponse* files_page(CHTTPConnection* con, CHTTPRequest* request) {
 
     PGresult *filesRes = ganyu_make_sql_request(con, 
         "SELECT VF.ID, VF.FileName, VF.FileExtension, VF.FileSize, S.ID, S.sourceName \
-        FROM maja8801.VirtualFile AS VF \
-        JOIN maja8801.Source AS S ON VF.SourceID = S.ID \
+        FROM ganyu.VirtualFile AS VF \
+        JOIN ganyu.Source AS S ON VF.SourceID = S.ID \
         WHERE (VF.ID > $1) AND (VF.ID < $2) AND (VF.FileName LIKE $3);", (const char**) params, 3);
     
     if(filesRes == NULL) {
@@ -40,7 +40,7 @@ CHTTPResponse* files_page(CHTTPConnection* con, CHTTPRequest* request) {
     int cols = PQnfields(filesRes);
 
     char* count = "0";
-    PGresult *fileCount = ganyu_make_sql_request(con, "SELECT COUNT(*) FROM maja8801.VirtualFile;", NULL, 0);
+    PGresult *fileCount = ganyu_make_sql_request(con, "SELECT COUNT(*) FROM ganyu.VirtualFile;", NULL, 0);
     if(fileCount != NULL) {
         count = PQgetvalue(fileCount, 0, 0);
     }
