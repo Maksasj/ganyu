@@ -1,8 +1,8 @@
 #!/bin/bash
 
-echo 'Started backend service, waiting 10 seconds'
+echo 'Started backend service, waiting 30 seconds'
 
-sleep 10s
+sleep 30s
 
 echo 'Starting ganyu server'
 
